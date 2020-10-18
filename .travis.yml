@@ -11,7 +11,7 @@ matrix:
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest"
     - php: 7.4
     - php: 7.4
-      env: DEPENDENCIES="symfony/lts:^4"
+      env: DEPENDENCIES="symfony/config:^4.4 symfony/dependency-injection:^4.4 symfony/form:^4.4 symfony/http-kernel:^4.4 symfony/yaml:^4.4"
     - php: 7.4
       env: STABILITY="dev"
 
