@@ -101,7 +101,7 @@ class ListBuilder implements ListBuilderInterface
                 $fieldMapping = $metadata->fieldMappings[$lastPropertyName];
                 $fieldDescription->setFieldMapping($fieldMapping);
 
-                if ($fieldMapping['id'] ?? false !== true) {
+                if (($fieldMapping['id'] ?? false) !== true) {
                     // Only ORDER BY time supported at this time
                     $fieldDescription->setOption('sortable', false);
                 }
