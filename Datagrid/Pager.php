@@ -22,7 +22,7 @@ class Pager extends BasePager
         /** @var Query $countQuery */
         $countQuery = clone $this->getQuery();
 
-        return $countQuery->count('value')->getSingleScalarResult() ?? 0;
+        return $countQuery->executeCount();
     }
 
     /**

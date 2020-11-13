@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "javer/influxdb-odm": "^1.0",
+        "javer/influxdb-odm": "^1.0.4",
         "javer/influxdb-odm-bundle": "^1.0",
         "sonata-project/admin-bundle": "^3.0",
         "sonata-project/form-extensions": "^0.1 || ^1.0",
