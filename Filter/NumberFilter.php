@@ -30,10 +30,24 @@ class NumberFilter extends Filter
             return;
         }
 
-        $type = $data['type'] ?? NumberOperatorType::TYPE_EQUAL;
+        $field = $this->quoteFieldName($field);
+        $type = $data['type'] ?? $this->getOption('operator_default_type');
         $operator = $this->getOperator((int) $type);
+        $value = $this->quoteFieldValue($data['value']);
 
-        $this->applyWhere($queryBuilder, sprintf("%s %s '%s'", $field, $operator, $data['value']));
+        $this->applyWhere($queryBuilder, sprintf("%s %s %s", $field, $operator, $value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDefaultOptions(): array
+    {
+        return [
+            'operator_type' => NumberOperatorType::class,
+            'operator_options' => [],
+            'operator_default_type' => NumberOperatorType::TYPE_EQUAL,
+        ];
     }
 
     /**

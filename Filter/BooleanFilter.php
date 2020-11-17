@@ -29,7 +29,22 @@ class BooleanFilter extends Filter
             return;
         }
 
-        $this->applyWhere($queryBuilder, sprintf('%s = %d', $field, $data['value'] === BooleanType::TYPE_YES ? 1 : 0));
+        $field = $this->quoteFieldName($field);
+        $value = $this->quoteFieldValue($data['value'] === BooleanType::TYPE_YES ? 1 : 0);
+
+        $this->applyWhere($queryBuilder, sprintf('%s = %s', $field, $value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDefaultOptions(): array
+    {
+        return [
+            'field_type' => BooleanType::class,
+            'operator_type' => HiddenType::class,
+            'operator_options' => [],
+        ];
     }
 
     /**
@@ -42,8 +57,8 @@ class BooleanFilter extends Filter
             [
                 'field_type' => $this->getFieldType(),
                 'field_options' => $this->getFieldOptions(),
-                'operator_type' => HiddenType::class,
-                'operator_options' => [],
+                'operator_type' => $this->getOption('operator_type'),
+                'operator_options' => $this->getOption('operator_options'),
                 'label' => $this->getLabel(),
             ],
         ];

@@ -36,7 +36,8 @@ class StringFilter extends Filter
             return;
         }
 
-        $type = $data['type'] ?? StringOperatorType::TYPE_CONTAINS;
+        $field = $this->quoteFieldName($field);
+        $type = $data['type'] ?? $this->getOption('operator_default_type');
         $operator = $this->getOperator((int) $type);
         $format = "'%s'";
 
@@ -56,6 +57,18 @@ class StringFilter extends Filter
     /**
      * {@inheritDoc}
      */
+    public function getDefaultOptions(): array
+    {
+        return [
+            'operator_type' => StringOperatorType::class,
+            'operator_options' => [],
+            'operator_default_type' => StringOperatorType::TYPE_CONTAINS,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getRenderSettings(): array
     {
         return [
@@ -64,7 +77,8 @@ class StringFilter extends Filter
                 'field_type' => $this->getFieldType(),
                 'field_options' => $this->getFieldOptions(),
                 'label' => $this->getLabel(),
-                'operator_type' => StringOperatorType::class,
+                'operator_type' => $this->getOption('operator_type'),
+                'operator_options' => $this->getOption('operator_options'),
             ],
         ];
     }

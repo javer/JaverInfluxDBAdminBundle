@@ -2,7 +2,6 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
-use Sonata\AdminBundle\Form\Type\Filter\ChoiceType;
 use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 
 /**
@@ -19,7 +18,8 @@ class ChoiceFilter extends StringFilter
     {
         return [
             DefaultType::class, [
-                'operator_type' => ChoiceType::class,
+                'operator_type' => $this->getOption('operator_type'),
+                'operator_options' => $this->getOption('operator_options'),
                 'field_type' => $this->getFieldType(),
                 'field_options' => $this->getFieldOptions(),
                 'label' => $this->getLabel(),

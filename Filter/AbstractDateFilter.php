@@ -53,6 +53,8 @@ abstract class AbstractDateFilter extends Filter
             return;
         }
 
+        $field = $this->quoteFieldName($field);
+
         if ($this->range) {
             // additional data check for ranged items
             if (!array_key_exists('start', $data['value']) || !array_key_exists('end', $data['value'])) {

@@ -58,4 +58,32 @@ abstract class Filter extends BaseFilter
 
         $this->active = true;
     }
+
+    /**
+     * Quotes field name.
+     *
+     * @param string $field
+     *
+     * @return string
+     */
+    protected function quoteFieldName(string $field): string
+    {
+        $isId = $this->getFieldMapping()['id'] ?? false;
+
+        return $isId ? $field : sprintf('"%s"', $field);
+    }
+
+    /**
+     * Quotes field value.
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    protected function quoteFieldValue($value)
+    {
+        $isTag = $this->getFieldMapping()['tag'] ?? false;
+
+        return $isTag ? sprintf("'%s'", $value) : $value;
+    }
 }
