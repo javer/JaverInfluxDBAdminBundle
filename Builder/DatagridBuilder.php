@@ -2,14 +2,14 @@
 
 namespace Javer\InfluxDB\AdminBundle\Builder;
 
-use Javer\InfluxDB\AdminBundle\Datagrid\Pager;
+use Javer\InfluxDB\AdminBundle\Datagrid\Pager as InfluxDBPager;
 use RuntimeException;
 use Sonata\AdminBundle\Admin\AdminInterface;
 use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Builder\DatagridBuilderInterface;
 use Sonata\AdminBundle\Datagrid\Datagrid;
 use Sonata\AdminBundle\Datagrid\DatagridInterface;
-use Sonata\AdminBundle\Datagrid\PagerInterface;
+use Sonata\AdminBundle\Datagrid\Pager;
 use Sonata\AdminBundle\Datagrid\SimplePager;
 use Sonata\AdminBundle\Filter\FilterFactoryInterface;
 use Sonata\AdminBundle\Guesser\TypeGuesserInterface;
@@ -174,15 +174,15 @@ class DatagridBuilder implements DatagridBuilderInterface
      *
      * @param string $pagerType
      *
-     * @return PagerInterface
+     * @return Pager
      *
      * @throws RuntimeException
      */
-    private function getPager(string $pagerType)
+    private function getPager(string $pagerType): Pager
     {
         switch ($pagerType) {
             case Pager::TYPE_DEFAULT:
-                return new Pager();
+                return new InfluxDBPager();
 
             case Pager::TYPE_SIMPLE:
                 return new SimplePager();

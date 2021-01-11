@@ -26,6 +26,16 @@ class Pager extends BasePager
     }
 
     /**
+     * Computes count of results.
+     *
+     * @return int
+     */
+    public function countResults(): int
+    {
+        return $this->getNbResults();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getResults(): array

@@ -2,7 +2,6 @@
 
 namespace Javer\InfluxDB\AdminBundle\Datagrid;
 
-use BadMethodCallException;
 use Javer\InfluxDB\ODM\Query\Query;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 
@@ -38,7 +37,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function __call($name, $args)
+    public function __call(string $name, array $args)
     {
         return call_user_func_array([$this->query, $name], $args);
     }
@@ -64,7 +63,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function execute(array $params = [], $hydrationMode = null): array
+    public function execute(array $params = [], ?int $hydrationMode = null): array
     {
         $query = clone $this->query;
 
@@ -80,7 +79,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function setSortBy($parentAssociationMappings, $fieldMapping): self
+    public function setSortBy(array $parentAssociationMappings, array $fieldMapping): self
     {
         $this->sortBy = $fieldMapping['fieldName'];
 
@@ -98,7 +97,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function setSortOrder($sortOrder): self
+    public function setSortOrder(string $sortOrder): self
     {
         $this->sortOrder = $sortOrder;
 
@@ -124,7 +123,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function setFirstResult($firstResult): self
+    public function setFirstResult(?int $firstResult): self
     {
         $this->firstResult = $firstResult;
 
@@ -144,7 +143,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function setMaxResults($maxResults): self
+    public function setMaxResults(?int $maxResults): self
     {
         $this->maxResults = $maxResults;
 
@@ -167,15 +166,5 @@ class ProxyQuery implements ProxyQueryInterface
     public function getUniqueParameterId(): int
     {
         return $this->uniqueParameterId++;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @throws BadMethodCallException
-     */
-    public function entityJoin(array $associationMappings): string
-    {
-        throw new BadMethodCallException(__METHOD__ . '() is not implemented yet.');
     }
 }

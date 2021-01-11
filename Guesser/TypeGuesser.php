@@ -18,7 +18,7 @@ class TypeGuesser extends AbstractTypeGuesser
     /**
      * {@inheritDoc}
      */
-    public function guessType($class, $property, ModelManagerInterface $modelManager): TypeGuess
+    public function guessType(string $class, string $property, ModelManagerInterface $modelManager): ?TypeGuess
     {
         if (!$parentMetadata = $this->getParentMetadataForProperty($class, $property, $modelManager)) {
             return new TypeGuess(TemplateRegistry::TYPE_STRING, [], Guess::LOW_CONFIDENCE);

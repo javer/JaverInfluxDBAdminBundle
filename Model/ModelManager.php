@@ -16,6 +16,7 @@ use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Datagrid\DatagridInterface;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
+use Sonata\Exporter\Source\SourceIteratorInterface;
 
 /**
  * Class ModelManager
@@ -90,7 +91,7 @@ class ModelManager implements ModelManagerInterface
      *
      * @throws RuntimeException
      */
-    public function getNewFieldDescriptionInstance($class, $name, array $options = []): FieldDescription
+    public function getNewFieldDescriptionInstance(string $class, string $name, array $options = []): FieldDescription
     {
         if (!is_string($name)) {
             throw new RuntimeException('The name argument must be a string');
@@ -101,9 +102,7 @@ class ModelManager implements ModelManagerInterface
 
         [$metadata, $propertyName] = $this->getParentMetadataForProperty($class, $name);
 
-        $fieldDescription = new FieldDescription();
-        $fieldDescription->setName($name);
-        $fieldDescription->setOptions($options);
+        $fieldDescription = new FieldDescription($name, $options);
 
         if (isset($metadata->fieldMappings[$propertyName])) {
             $fieldDescription->setFieldMapping($metadata->fieldMappings[$propertyName]);
@@ -115,7 +114,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function create($object): void
+    public function create(object $object): void
     {
         $this->measurementManager->persist($object);
     }
@@ -123,7 +122,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function update($object): void
+    public function update(object $object): void
     {
         $this->measurementManager->persist($object);
     }
@@ -131,7 +130,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function delete($object): void
+    public function delete(object $object): void
     {
         $this->measurementManager->remove($object);
     }
@@ -139,7 +138,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function findBy($class, array $criteria = []): array
+    public function findBy(string $class, array $criteria = []): array
     {
         return $this->measurementManager->getRepository($class)->findBy($criteria);
     }
@@ -147,7 +146,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function findOneBy($class, array $criteria = []): ?object
+    public function findOneBy(string $class, array $criteria = []): ?object
     {
         return $this->measurementManager->getRepository($class)->findOneBy($criteria);
     }
@@ -155,7 +154,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function find($class, $id): ?object
+    public function find(string $class, $id): ?object
     {
         return $this->measurementManager->getRepository($class)->find($id);
     }
@@ -163,7 +162,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function batchDelete($class, ProxyQueryInterface $queryProxy): void
+    public function batchDelete(string $class, ProxyQueryInterface $queryProxy): void
     {
         /** @var Query $query */
         $query = $queryProxy->getQuery();
@@ -176,7 +175,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getParentFieldDescription($parentAssociationMapping, $class): FieldDescription
+    public function getParentFieldDescription(array $parentAssociationMapping, string $class): FieldDescription
     {
         return $this->getNewFieldDescriptionInstance($class, $parentAssociationMapping['fieldName']);
     }
@@ -184,7 +183,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function createQuery($class, $alias = 'o'): ProxyQuery
+    public function createQuery(string $class): ProxyQuery
     {
         return new ProxyQuery($this->measurementManager->getRepository($class)->createQuery());
     }
@@ -192,7 +191,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getModelIdentifier($class): string
+    public function getModelIdentifier(string $class): string
     {
         return $this->getMetadata($class)->identifier;
     }
@@ -200,7 +199,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getIdentifierValues($model): array
+    public function getIdentifierValues(object $model): array
     {
         $class = get_class($model);
         $metadata = $this->getMetadata($class);
@@ -225,7 +224,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getIdentifierFieldNames($class): array
+    public function getIdentifierFieldNames(string $class): array
     {
         return $this->getMetadata($class)->getIdentifierFieldNames();
     }
@@ -235,7 +234,7 @@ class ModelManager implements ModelManagerInterface
      *
      * @throws RuntimeException
      */
-    public function getNormalizedIdentifier($model): ?string
+    public function getNormalizedIdentifier(object $model): ?string
     {
         if ($model === null) {
             return null;
@@ -253,7 +252,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getUrlSafeIdentifier($model): ?string
+    public function getUrlSafeIdentifier(object $model): ?string
     {
         return $this->getNormalizedIdentifier($model);
     }
@@ -261,7 +260,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getModelInstance($class): object
+    public function getModelInstance(string $class): object
     {
         return $this->getMetadata($class)->newInstance();
     }
@@ -329,7 +328,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function modelReverseTransform($class, array $array = []): object
+    public function modelReverseTransform(string $class, array $array = []): object
     {
         $hydrator = $this->measurementManager->createHydrator($class);
 
@@ -349,7 +348,7 @@ class ModelManager implements ModelManagerInterface
      *
      * @throws InvalidArgumentException
      */
-    public function executeQuery($query)
+    public function executeQuery(object $query)
     {
         if (!$query instanceof ProxyQuery) {
             throw new InvalidArgumentException('Query must be ' . ProxyQuery::class);
@@ -364,9 +363,9 @@ class ModelManager implements ModelManagerInterface
     public function getDataSourceIterator(
         DatagridInterface $datagrid,
         array $fields,
-        $firstResult = null,
-        $maxResult = null
-    )
+        ?int $firstResult = null,
+        ?int $maxResult = null
+    ): SourceIteratorInterface
     {
         $datagrid->buildPager();
         $query = $datagrid->getQuery();
@@ -383,7 +382,7 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getExportFields($class): array
+    public function getExportFields(string $class): array
     {
         return $this->getMetadata($class)->getFieldNames();
     }
@@ -408,7 +407,7 @@ class ModelManager implements ModelManagerInterface
      *
      * @throws InvalidArgumentException
      */
-    public function addIdentifiersToQuery($class, ProxyQueryInterface $query, array $idx): void
+    public function addIdentifiersToQuery(string $class, ProxyQueryInterface $query, array $idx): void
     {
         if (count($idx) !== 1) {
             throw new InvalidArgumentException(
@@ -443,6 +442,14 @@ class ModelManager implements ModelManagerInterface
     public function getDefaultPerPageOptions(string $class): array
     {
         return [10, 25, 50, 100, 250];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function supportsQuery(object $query): bool
+    {
+        return $query instanceof Query;
     }
 
     /**

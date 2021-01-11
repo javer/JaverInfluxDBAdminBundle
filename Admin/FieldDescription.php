@@ -14,15 +14,9 @@ class FieldDescription extends BaseFieldDescription
 {
     /**
      * {@inheritDoc}
-     *
-     * @throws RuntimeException
      */
-    public function setAssociationMapping($associationMapping): void
+    public function setAssociationMapping(array $associationMapping): void
     {
-        if (!is_array($associationMapping)) {
-            throw new RuntimeException('The association mapping must be an array');
-        }
-
         $this->associationMapping = $associationMapping;
 
         $this->type = $this->type ?: $associationMapping['type'];
@@ -53,12 +47,8 @@ class FieldDescription extends BaseFieldDescription
      *
      * @throws RuntimeException
      */
-    public function setFieldMapping($fieldMapping): void
+    public function setFieldMapping(array $fieldMapping): void
     {
-        if (!is_array($fieldMapping)) {
-            throw new RuntimeException('The field mapping must be an array');
-        }
-
         $this->fieldMapping = $fieldMapping;
 
         $this->type = $this->type ?: $fieldMapping['type'];

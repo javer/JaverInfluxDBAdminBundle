@@ -28,7 +28,7 @@ class FilterTypeGuesser extends AbstractTypeGuesser
      *
      * @throws MissingPropertyMetadataException
      */
-    public function guessType($class, $property, ModelManagerInterface $modelManager): ?TypeGuess
+    public function guessType(string $class, string $property, ModelManagerInterface $modelManager): ?TypeGuess
     {
         if (!$ret = $this->getParentMetadataForProperty($class, $property, $modelManager)) {
             return null;

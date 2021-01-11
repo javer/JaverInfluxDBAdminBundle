@@ -49,7 +49,7 @@ class ShowBuilder implements ShowBuilderInterface
      */
     public function addField(
         FieldDescriptionCollection $list,
-        $type,
+        ?string $type,
         FieldDescriptionInterface $fieldDescription,
         AdminInterface $admin
     ): void
