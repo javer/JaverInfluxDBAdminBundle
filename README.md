@@ -4,7 +4,7 @@ JaverInfluxDBAdminBundle
 This bundle integrates the [InfluxDB Object Document Mapper (ODM) library](https://github.com/javer/influxdb-odm)
 into SonataAdminBundle so that you can persist and retrieve objects to and from InfluxDB.
 
-[![Build Status](https://secure.travis-ci.org/javer/JaverInfluxDBAdminBundle.png?branch=master)](http://travis-ci.org/javer/JaverInfluxDBAdminBundle)
+[![Build Status](https://github.com/javer/JaverInfluxDBAdminBundle/actions/workflows/test.yaml/badge.svg)](https://github.com/javer/JaverInfluxDBAdminBundle/actions/workflows/test.yaml)
 
 Installation
 ============
