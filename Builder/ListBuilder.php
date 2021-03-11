@@ -47,9 +47,9 @@ class ListBuilder implements ListBuilderInterface
     /**
      * {@inheritDoc}
      */
-    public function buildField($type, FieldDescriptionInterface $fieldDescription, AdminInterface $admin): void
+    public function buildField(?string $type, FieldDescriptionInterface $fieldDescription, AdminInterface $admin): void
     {
-        if (null === $type) {
+        if ($type === null) {
             $guessType = $this->guesser
                 ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
 
@@ -66,7 +66,7 @@ class ListBuilder implements ListBuilderInterface
      */
     public function addField(
         FieldDescriptionCollection $list,
-        $type,
+        ?string $type,
         FieldDescriptionInterface $fieldDescription,
         AdminInterface $admin
     ): void
@@ -91,40 +91,25 @@ class ListBuilder implements ListBuilderInterface
 
         $fieldDescription->setAdmin($admin);
 
-        if ($admin->getModelManager()->hasMetadata($admin->getClass())) {
-            [$metadata, $lastPropertyName, $parentAssociationMappings] = $admin->getModelManager()
-                ->getParentMetadataForProperty($admin->getClass(), $fieldDescription->getName());
-            $fieldDescription->setParentAssociationMappings($parentAssociationMappings);
-
-            // set the default field mapping
-            if (isset($metadata->fieldMappings[$lastPropertyName])) {
-                $fieldMapping = $metadata->fieldMappings[$lastPropertyName];
-                $fieldDescription->setFieldMapping($fieldMapping);
-
-                if (($fieldMapping['id'] ?? false) !== true) {
-                    // Only ORDER BY time supported at this time
-                    $fieldDescription->setOption('sortable', false);
-                }
-
-                if ($fieldDescription->getOption('sortable') !== false) {
-                    $fieldDescription->setOption('sortable', $fieldDescription->getOption('sortable', true));
-                    $fieldDescription->setOption(
-                        'sort_parent_association_mappings',
-                        $fieldDescription->getOption(
-                            'sort_parent_association_mappings',
-                            $fieldDescription->getParentAssociationMappings()
-                        )
-                    );
-                    $fieldDescription->setOption(
-                        'sort_field_mapping',
-                        $fieldDescription->getOption('sort_field_mapping', $fieldDescription->getFieldMapping())
-                    );
-                }
+        if (($fieldMapping = $fieldDescription->getFieldMapping()) !== []) {
+            if (($fieldMapping['id'] ?? false) !== true) {
+                // Only ORDER BY time supported at this time
+                $fieldDescription->setOption('sortable', false);
             }
 
-            // set the default association mapping
-            if (isset($metadata->associationMappings[$lastPropertyName])) {
-                $fieldDescription->setAssociationMapping($metadata->associationMappings[$lastPropertyName]);
+            if ($fieldDescription->getOption('sortable') !== false) {
+                $fieldDescription->setOption('sortable', $fieldDescription->getOption('sortable', true));
+                $fieldDescription->setOption(
+                    'sort_parent_association_mappings',
+                    $fieldDescription->getOption(
+                        'sort_parent_association_mappings',
+                        $fieldDescription->getParentAssociationMappings()
+                    )
+                );
+                $fieldDescription->setOption(
+                    'sort_field_mapping',
+                    $fieldDescription->getOption('sort_field_mapping', $fieldDescription->getFieldMapping())
+                );
             }
 
             $fieldDescription->setOption('_sort_order', $fieldDescription->getOption('_sort_order', 'ASC'));
@@ -135,9 +120,6 @@ class ListBuilder implements ListBuilderInterface
                 sprintf('Please define a type for field `%s` in `%s`', $fieldDescription->getName(), get_class($admin))
             );
         }
-
-        $fieldDescription->setOption('code', $fieldDescription->getOption('code', $fieldDescription->getName()));
-        $fieldDescription->setOption('label', $fieldDescription->getOption('label', $fieldDescription->getName()));
 
         if (!$fieldDescription->getTemplate()) {
             $fieldDescription->setTemplate($this->getTemplate($fieldDescription->getType()));
@@ -155,16 +137,8 @@ class ListBuilder implements ListBuilderInterface
             $fieldDescription->setTemplate('@SonataAdmin/CRUD/list__action.html.twig');
         }
 
-        if ($fieldDescription->getType() === null) {
+        if (in_array($fieldDescription->getType(), [null, '_action'], true)) {
             $fieldDescription->setType('actions');
-        }
-
-        if ($fieldDescription->getOption('name') === null) {
-            $fieldDescription->setOption('name', 'Action');
-        }
-
-        if ($fieldDescription->getOption('code') === null) {
-            $fieldDescription->setOption('code', 'Action');
         }
 
         if ($fieldDescription->getOption('actions') !== null) {

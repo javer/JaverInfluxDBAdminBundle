@@ -24,23 +24,6 @@ class NumberFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function filter(ProxyQueryInterface $queryBuilder, $alias, $field, $data): void
-    {
-        if (!$data || !is_array($data) || !array_key_exists('value', $data) || !is_numeric($data['value'])) {
-            return;
-        }
-
-        $field = $this->quoteFieldName($field);
-        $type = $data['type'] ?? $this->getOption('operator_default_type');
-        $operator = $this->getOperator((int) $type);
-        $value = $this->quoteFieldValue($data['value']);
-
-        $this->applyWhere($queryBuilder, sprintf("%s %s %s", $field, $operator, $value));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getDefaultOptions(): array
     {
         return [
@@ -63,6 +46,23 @@ class NumberFilter extends Filter
                 'label' => $this->getLabel(),
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    {
+        if (!$data || !is_array($data) || !array_key_exists('value', $data) || !is_numeric($data['value'])) {
+            return;
+        }
+
+        $field = $this->quoteFieldName($field);
+        $type = $data['type'] ?? $this->getOption('operator_default_type');
+        $operator = $this->getOperator((int) $type);
+        $value = $this->quoteFieldValue($data['value']);
+
+        $this->applyWhere($query, sprintf("%s %s %s", $field, $operator, $value));
     }
 
     /**

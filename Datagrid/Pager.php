@@ -12,33 +12,22 @@ use Sonata\AdminBundle\Datagrid\Pager as BasePager;
  */
 class Pager extends BasePager
 {
-    /**
-     * Computes number of results.
-     *
-     * @return integer
-     */
-    public function computeNbResult(): int
-    {
-        /** @var Query $countQuery */
-        $countQuery = clone $this->getQuery();
-
-        return $countQuery->executeCount();
-    }
+    private int $resultsCount = 0;
 
     /**
      * Computes count of results.
      *
-     * @return int
+     * @return integer
      */
     public function countResults(): int
     {
-        return $this->getNbResults();
+        return $this->resultsCount;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getResults(): array
+    public function getCurrentPageResults(): array
     {
         /** @var ProxyQuery $query */
         $query = $this->getQuery();
@@ -55,9 +44,7 @@ class Pager extends BasePager
      */
     public function init(): void
     {
-        $this->resetIterator();
-
-        $this->setNbResults($this->computeNbResult());
+        $this->resultsCount = $this->computeResultsCount();
 
         /** @var ProxyQuery $query */
         $query = $this->getQuery();
@@ -65,15 +52,28 @@ class Pager extends BasePager
         $query->setFirstResult(0);
         $query->setMaxResults(0);
 
-        if ($this->getPage() === 0 || $this->getMaxPerPage() === 0 || $this->getNbResults() === 0) {
+        if ($this->getPage() === 0 || $this->getMaxPerPage() === 0 || $this->countResults() === 0) {
             $this->setLastPage(0);
         } else {
             $offset = ($this->getPage() - 1) * $this->getMaxPerPage();
 
-            $this->setLastPage((int) ceil($this->getNbResults() / $this->getMaxPerPage()));
+            $this->setLastPage((int) ceil($this->countResults() / $this->getMaxPerPage()));
 
             $query->setFirstResult($offset);
             $query->setMaxResults($this->getMaxPerPage());
         }
+    }
+
+    /**
+     * Computes count of results.
+     *
+     * @return integer
+     */
+    private function computeResultsCount(): int
+    {
+        /** @var Query $countQuery */
+        $countQuery = clone $this->getQuery();
+
+        return $countQuery->executeCount();
     }
 }

@@ -54,7 +54,7 @@ class ShowBuilder implements ShowBuilderInterface
         AdminInterface $admin
     ): void
     {
-        if (null === $type) {
+        if ($type === null) {
             $guessType = $this->guesser
                 ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
 
@@ -82,30 +82,11 @@ class ShowBuilder implements ShowBuilderInterface
     {
         $fieldDescription->setAdmin($admin);
 
-        if ($admin->getModelManager()->hasMetadata($admin->getClass())) {
-            [$metadata, $lastPropertyName, $parentAssociationMappings] = $admin->getModelManager()
-                ->getParentMetadataForProperty($admin->getClass(), $fieldDescription->getName());
-            $fieldDescription->setParentAssociationMappings($parentAssociationMappings);
-
-            // set the default field mapping
-            if (isset($metadata->fieldMappings[$lastPropertyName])) {
-                $fieldDescription->setFieldMapping($metadata->fieldMappings[$lastPropertyName]);
-            }
-
-            // set the default association mapping
-            if (isset($metadata->associationMappings[$lastPropertyName])) {
-                $fieldDescription->setAssociationMapping($metadata->associationMappings[$lastPropertyName]);
-            }
-        }
-
         if (!$fieldDescription->getType()) {
             throw new RuntimeException(
                 sprintf('Please define a type for field `%s` in `%s`', $fieldDescription->getName(), get_class($admin))
             );
         }
-
-        $fieldDescription->setOption('code', $fieldDescription->getOption('code', $fieldDescription->getName()));
-        $fieldDescription->setOption('label', $fieldDescription->getOption('label', $fieldDescription->getName()));
 
         if (!$fieldDescription->getTemplate()) {
             $fieldDescription->setTemplate($this->getTemplate($fieldDescription->getType()));

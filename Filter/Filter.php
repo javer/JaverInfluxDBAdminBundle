@@ -18,13 +18,9 @@ abstract class Filter extends BaseFilter
     /**
      * {@inheritDoc}
      */
-    public function apply($query, $value): void
+    public function apply(ProxyQueryInterface $query, array $filterData): void
     {
-        $this->value = $value;
-
-        $field = $this->getFieldMapping()['name'];
-
-        $this->filter($query, null, $field, $value);
+        $this->filter($query, $this->getFieldName(), $filterData);
     }
 
     /**
@@ -42,6 +38,16 @@ abstract class Filter extends BaseFilter
     {
         return [];
     }
+
+    /**
+     * Filter.
+     *
+     * @param ProxyQueryInterface $query
+     * @param string              $field
+     * @param mixed               $data
+     */
+    /* phpcs:ignore */
+    abstract protected function filter(ProxyQueryInterface $query, string $field, $data): void;
 
     /**
      * Apply where.

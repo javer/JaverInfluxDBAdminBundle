@@ -64,41 +64,40 @@ class DatagridBuilder implements DatagridBuilderInterface
     {
         $fieldDescription->setAdmin($admin);
 
-        if ($admin->getModelManager()->hasMetadata($admin->getClass())) {
-            [$metadata, $lastPropertyName, $parentAssociationMappings] = $admin->getModelManager()
-                ->getParentMetadataForProperty($admin->getClass(), $fieldDescription->getName());
-
-            // set the default field mapping
-            if (isset($metadata->fieldMappings[$lastPropertyName])) {
-                $fieldDescription->setOption(
-                    'field_mapping',
-                    $fieldDescription->getOption('field_mapping', $metadata->fieldMappings[$lastPropertyName])
-                );
-
-                if ($metadata->fieldMappings[$lastPropertyName]['type'] === 'string') {
-                    $fieldDescription->setOption('global_search', $fieldDescription->getOption('global_search', true));
-                }
-            }
-
-            // set the default association mapping
-            if (isset($metadata->associationMappings[$lastPropertyName])) {
-                $fieldDescription->setOption(
-                    'association_mapping',
-                    $fieldDescription->getOption(
-                        'association_mapping',
-                        $metadata->associationMappings[$lastPropertyName]
-                    )
-                );
-            }
-
+        if ($fieldDescription->getFieldMapping() !== []) {
             $fieldDescription->setOption(
-                'parent_association_mappings',
-                $fieldDescription->getOption('parent_association_mappings', $parentAssociationMappings)
+                'field_mapping',
+                $fieldDescription->getOption('field_mapping', $fieldDescription->getFieldMapping())
+            );
+
+            if ($fieldDescription->getFieldMapping()['type'] === 'string') {
+                $fieldDescription->setOption('global_search', $fieldDescription->getOption('global_search', true));
+            }
+        }
+
+        if ($fieldDescription->getAssociationMapping() !== []) {
+            $fieldDescription->setOption(
+                'association_mapping',
+                $fieldDescription->getOption('association_mapping', $fieldDescription->getAssociationMapping())
             );
         }
 
-        $fieldDescription->setOption('code', $fieldDescription->getOption('code', $fieldDescription->getName()));
-        $fieldDescription->setOption('name', $fieldDescription->getOption('name', $fieldDescription->getName()));
+        if ($fieldDescription->getParentAssociationMappings() !== []) {
+            $fieldDescription->setOption(
+                'parent_association_mappings',
+                $fieldDescription->getOption(
+                    'parent_association_mappings',
+                    $fieldDescription->getParentAssociationMappings()
+                )
+            );
+        }
+
+        $fieldDescription->setOption(
+            'field_name',
+            $fieldDescription->getOption('field_name', $fieldDescription->getFieldName())
+        );
+
+        $fieldDescription->mergeOption('field_options', ['required' => false]);
     }
 
     /**
@@ -106,12 +105,12 @@ class DatagridBuilder implements DatagridBuilderInterface
      */
     public function addFilter(
         DatagridInterface $datagrid,
-        $type,
+        ?string $type,
         FieldDescriptionInterface $fieldDescription,
         AdminInterface $admin
     ): void
     {
-        if (null === $type) {
+        if ($type === null) {
             $guessType = $this->guesser
                 ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
 
@@ -136,15 +135,7 @@ class DatagridBuilder implements DatagridBuilderInterface
 
         $admin->addFilterFieldDescription($fieldDescription->getName(), $fieldDescription);
 
-        $fieldDescription->mergeOption('field_options', ['required' => false]);
-
         $filter = $this->filterFactory->create($fieldDescription->getName(), $type, $fieldDescription->getOptions());
-
-        if ($filter->getLabel() !== false && !$filter->getLabel()) {
-            $filter->setLabel(
-                $admin->getLabelTranslatorStrategy()->getLabel($fieldDescription->getName(), 'filter', 'label')
-            );
-        }
 
         $datagrid->addFilter($filter);
     }
@@ -156,9 +147,7 @@ class DatagridBuilder implements DatagridBuilderInterface
     {
         $pager = $this->getPager($admin->getPagerType());
 
-        $pager->setCountColumn($admin->getModelManager()->getIdentifierFieldNames($admin->getClass()));
-
-        $defaultOptions = [];
+        $defaultOptions = ['validation_groups' => false];
 
         if ($this->csrfTokenEnabled) {
             $defaultOptions['csrf_protection'] = false;

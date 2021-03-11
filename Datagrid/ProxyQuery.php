@@ -22,8 +22,6 @@ class ProxyQuery implements ProxyQueryInterface
 
     private ?int $maxResults = null;
 
-    private int $uniqueParameterId = 0;
-
     /**
      * ProxyQuery constructor.
      *
@@ -158,13 +156,5 @@ class ProxyQuery implements ProxyQueryInterface
     public function getMaxResults(): ?int
     {
         return $this->maxResults;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getUniqueParameterId(): int
-    {
-        return $this->uniqueParameterId++;
     }
 }

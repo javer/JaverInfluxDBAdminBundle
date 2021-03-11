@@ -24,7 +24,36 @@ class StringFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function filter(ProxyQueryInterface $queryBuilder, $name, $field, $data): void
+    public function getDefaultOptions(): array
+    {
+        return [
+            'operator_type' => StringOperatorType::class,
+            'operator_options' => [],
+            'operator_default_type' => StringOperatorType::TYPE_CONTAINS,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRenderSettings(): array
+    {
+        return [
+            ChoiceType::class,
+            [
+                'field_type' => $this->getFieldType(),
+                'field_options' => $this->getFieldOptions(),
+                'label' => $this->getLabel(),
+                'operator_type' => $this->getOption('operator_type'),
+                'operator_options' => $this->getOption('operator_options'),
+            ],
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function filter(ProxyQueryInterface $query, string $field, $data): void
     {
         if (!$data || !is_array($data) || !array_key_exists('value', $data) || $data['value'] === null) {
             return;
@@ -51,36 +80,7 @@ class StringFilter extends Filter
 
         $value = $type === StringOperatorType::TYPE_EQUAL ? $data['value'] : preg_quote($data['value'], '/');
 
-        $this->applyWhere($queryBuilder, sprintf('%s %s ' . $format, $field, $operator, $value));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getDefaultOptions(): array
-    {
-        return [
-            'operator_type' => StringOperatorType::class,
-            'operator_options' => [],
-            'operator_default_type' => StringOperatorType::TYPE_CONTAINS,
-        ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getRenderSettings(): array
-    {
-        return [
-            ChoiceType::class,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'label' => $this->getLabel(),
-                'operator_type' => $this->getOption('operator_type'),
-                'operator_options' => $this->getOption('operator_options'),
-            ],
-        ];
+        $this->applyWhere($query, sprintf('%s %s ' . $format, $field, $operator, $value));
     }
 
     /**

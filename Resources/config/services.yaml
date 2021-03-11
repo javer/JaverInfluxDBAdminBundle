@@ -101,3 +101,6 @@ services:
         class: Javer\InfluxDB\AdminBundle\Filter\StringFilter
         tags:
             - { name: sonata.admin.filter.type, alias: influxdb_string }
+
+    sonata.admin.data_source.influxdb:
+        class: Javer\InfluxDB\AdminBundle\Exporter\DataSource

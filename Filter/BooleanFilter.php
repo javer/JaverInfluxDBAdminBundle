@@ -17,27 +17,6 @@ class BooleanFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function filter(ProxyQueryInterface $queryBuilder, $alias, $field, $data): void
-    {
-        if (
-            !$data
-            || !is_array($data)
-            || !array_key_exists('type', $data)
-            || !array_key_exists('value', $data)
-            || !in_array($data['value'], [BooleanType::TYPE_NO, BooleanType::TYPE_YES], true)
-        ) {
-            return;
-        }
-
-        $field = $this->quoteFieldName($field);
-        $value = $this->quoteFieldValue($data['value'] === BooleanType::TYPE_YES ? 1 : 0);
-
-        $this->applyWhere($queryBuilder, sprintf('%s = %s', $field, $value));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getDefaultOptions(): array
     {
         return [
@@ -62,5 +41,26 @@ class BooleanFilter extends Filter
                 'label' => $this->getLabel(),
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    {
+        if (
+            !$data
+            || !is_array($data)
+            || !array_key_exists('type', $data)
+            || !array_key_exists('value', $data)
+            || !in_array($data['value'], [BooleanType::TYPE_NO, BooleanType::TYPE_YES], true)
+        ) {
+            return;
+        }
+
+        $field = $this->quoteFieldName($field);
+        $value = $this->quoteFieldValue($data['value'] === BooleanType::TYPE_YES ? 1 : 0);
+
+        $this->applyWhere($query, sprintf('%s = %s', $field, $value));
     }
 }

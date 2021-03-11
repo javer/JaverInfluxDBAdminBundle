@@ -13,26 +13,6 @@ use Sonata\AdminBundle\Admin\BaseFieldDescription;
 class FieldDescription extends BaseFieldDescription
 {
     /**
-     * {@inheritDoc}
-     */
-    public function setAssociationMapping(array $associationMapping): void
-    {
-        $this->associationMapping = $associationMapping;
-
-        $this->type = $this->type ?: $associationMapping['type'];
-        $this->mappingType = $this->mappingType ?: $associationMapping['type'];
-        $this->fieldName = $associationMapping['fieldName'];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getTargetEntity(): ?string
-    {
-        return $this->getTargetModel();
-    }
-
-    /**
      * Returns target model.
      *
      * @return string|null
@@ -40,36 +20,6 @@ class FieldDescription extends BaseFieldDescription
     public function getTargetModel(): ?string
     {
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @throws RuntimeException
-     */
-    public function setFieldMapping(array $fieldMapping): void
-    {
-        $this->fieldMapping = $fieldMapping;
-
-        $this->type = $this->type ?: $fieldMapping['type'];
-        $this->mappingType = $this->mappingType ?: $fieldMapping['type'];
-        $this->fieldName = $this->fieldName ?: $fieldMapping['fieldName'];
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @throws RuntimeException
-     */
-    public function setParentAssociationMappings(array $parentAssociationMappings): void
-    {
-        foreach ($parentAssociationMappings as $parentAssociationMapping) {
-            if (!is_array($parentAssociationMapping)) {
-                throw new RuntimeException('An association mapping must be an array');
-            }
-        }
-
-        $this->parentAssociationMappings = $parentAssociationMappings;
     }
 
     /**
@@ -83,12 +33,50 @@ class FieldDescription extends BaseFieldDescription
     /**
      * {@inheritDoc}
      */
-    public function getValue($object)
+    public function getValue(object $object)
     {
         foreach ($this->parentAssociationMappings as $parentAssociationMapping) {
             $object = $this->getFieldValue($object, $parentAssociationMapping['fieldName']);
         }
 
-        return $this->getFieldValue($object, $this->fieldName);
+        return $this->getFieldValue($object, $this->getFieldName());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function setAssociationMapping(array $associationMapping): void
+    {
+        $this->associationMapping = $associationMapping;
+
+        $this->type = $this->type ?: (string) $associationMapping['type'];
+        $this->mappingType = $this->mappingType ?: $associationMapping['type'];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function setFieldMapping(array $fieldMapping): void
+    {
+        $this->fieldMapping = $fieldMapping;
+
+        $this->type = $this->type ?: (string) $fieldMapping['type'];
+        $this->mappingType = $this->mappingType ?: $fieldMapping['type'];
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws RuntimeException
+     */
+    protected function setParentAssociationMappings(array $parentAssociationMappings): void
+    {
+        foreach ($parentAssociationMappings as $parentAssociationMapping) {
+            if (!is_array($parentAssociationMapping)) {
+                throw new RuntimeException('An association mapping must be an array');
+            }
+        }
+
+        $this->parentAssociationMappings = $parentAssociationMappings;
     }
 }

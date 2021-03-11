@@ -17,27 +17,14 @@ class CallbackFilter extends Filter
 {
     /**
      * {@inheritDoc}
-     *
-     * @throws RuntimeException
-     */
-    public function filter(ProxyQueryInterface $queryBuilder, $alias, $field, $data): void
-    {
-        if (!is_callable($this->getOption('callback'))) {
-            throw new RuntimeException(
-                sprintf('Please provide a valid callback option "filter" for field "%s"', $this->getName())
-            );
-        }
-
-        $this->active = call_user_func($this->getOption('callback'), $queryBuilder, $alias, $field, $data);
-    }
-
-    /**
-     * {@inheritDoc}
      */
     public function getDefaultOptions(): array
     {
         return [
             'callback' => null,
+            'active_callback' => static function ($data) {
+                return isset($data['value']) && $data['value'];
+            },
             'field_type' => TextType::class,
             'operator_type' => HiddenType::class,
             'operator_options' => [],
@@ -59,5 +46,29 @@ class CallbackFilter extends Filter
                 'label' => $this->getLabel(),
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws RuntimeException
+     */
+    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    {
+        if (!is_callable($this->getOption('callback'))) {
+            throw new RuntimeException(
+                sprintf('Please provide a valid callback option "filter" for field "%s"', $this->getName())
+            );
+        }
+
+        call_user_func($this->getOption('callback'), $query, $field, $data);
+
+        if (is_callable($this->getOption('active_callback'))) {
+            $this->active = call_user_func($this->getOption('active_callback'), $data);
+
+            return;
+        }
+
+        $this->active = true;
     }
 }

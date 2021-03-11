@@ -46,7 +46,42 @@ abstract class AbstractDateFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function filter(ProxyQueryInterface $queryBuilder, $alias, $field, $data): void
+    public function getDefaultOptions(): array
+    {
+        return [
+            'input_type' => 'timestamp',
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRenderSettings(): array
+    {
+        $name = DateType::class;
+
+        if ($this->time && $this->range) {
+            $name = DateTimeRangeType::class;
+        } elseif ($this->time) {
+            $name = DateTimeType::class;
+        } elseif ($this->range) {
+            $name = DateRangeType::class;
+        }
+
+        return [
+            $name,
+            [
+                'field_type' => $this->getFieldType(),
+                'field_options' => $this->getFieldOptions(),
+                'label' => $this->getLabel(),
+            ],
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function filter(ProxyQueryInterface $query, string $field, $data): void
     {
         // check data sanity
         if (!$data || !is_array($data) || !array_key_exists('value', $data)) {
@@ -94,14 +129,14 @@ abstract class AbstractDateFilter extends Filter
                 : $data['type'];
 
             if (DateRangeOperatorType::TYPE_NOT_BETWEEN === $data['type']) {
-                $this->applyWhere($queryBuilder, sprintf("%s < '%s' OR %s > '%s'", $field, $fromDate, $field, $toDate));
+                $this->applyWhere($query, sprintf("%s < '%s' OR %s > '%s'", $field, $fromDate, $field, $toDate));
             } else {
                 if ($data['value']['start']) {
-                    $this->applyWhere($queryBuilder, sprintf("%s >= '%s'", $field, $fromDate));
+                    $this->applyWhere($query, sprintf("%s >= '%s'", $field, $fromDate));
                 }
 
                 if ($data['value']['end']) {
-                    $this->applyWhere($queryBuilder, sprintf("%s <= '%s'", $field, $toDate));
+                    $this->applyWhere($query, sprintf("%s <= '%s'", $field, $toDate));
                 }
             }
         } else {
@@ -130,7 +165,7 @@ abstract class AbstractDateFilter extends Filter
 
             // date filter should filter records for the whole day
             if (false === $this->time && DateOperatorType::TYPE_EQUAL === $data['type']) {
-                $this->applyWhere($queryBuilder, sprintf("%s %s '%s'", $field, '>=', $fromDate));
+                $this->applyWhere($query, sprintf("%s %s '%s'", $field, '>=', $fromDate));
 
                 if ('timestamp' === $this->getOption('input_type')) {
                     $endValue = strtotime('+1 day', $data['value']);
@@ -141,48 +176,13 @@ abstract class AbstractDateFilter extends Filter
 
                 $toDate = date(self::DATETIME_FORMAT, (int) $endValue);
 
-                $this->applyWhere($queryBuilder, sprintf("%s %s '%s'", $field, '<', $toDate));
+                $this->applyWhere($query, sprintf("%s %s '%s'", $field, '<', $toDate));
 
                 return;
             }
 
-            $this->applyWhere($queryBuilder, sprintf("%s %s '%s'", $field, $operator, $fromDate));
+            $this->applyWhere($query, sprintf("%s %s '%s'", $field, $operator, $fromDate));
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getDefaultOptions(): array
-    {
-        return [
-            'input_type' => 'timestamp',
-        ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getRenderSettings(): array
-    {
-        $name = DateType::class;
-
-        if ($this->time && $this->range) {
-            $name = DateTimeRangeType::class;
-        } elseif ($this->time) {
-            $name = DateTimeType::class;
-        } elseif ($this->range) {
-            $name = DateRangeType::class;
-        }
-
-        return [
-            $name,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'label' => $this->getLabel(),
-            ],
-        ];
     }
 
     /**

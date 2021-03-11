@@ -2,21 +2,15 @@
 
 namespace Javer\InfluxDB\AdminBundle\Model;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use InvalidArgumentException;
 use Javer\InfluxDB\AdminBundle\Admin\FieldDescription;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQuery;
-use Javer\InfluxDB\AdminBundle\Source\InfluxDBQuerySourceIterator;
 use Javer\InfluxDB\ODM\Mapping\ClassMetadata;
 use Javer\InfluxDB\ODM\MeasurementManager;
 use Javer\InfluxDB\ODM\Query\Query;
 use Javer\InfluxDB\ODM\Types\Type;
-use RuntimeException;
-use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
-use Sonata\AdminBundle\Datagrid\DatagridInterface;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
-use Sonata\Exporter\Source\SourceIteratorInterface;
 
 /**
  * Class ModelManager
@@ -37,18 +31,6 @@ class ModelManager implements ModelManagerInterface
     public function __construct(MeasurementManager $measurementManager)
     {
         $this->measurementManager = $measurementManager;
-    }
-
-    /**
-     * Returns metadata for the given class.
-     *
-     * @param string $class
-     *
-     * @return ClassMetadata
-     */
-    public function getMetadata(string $class): ClassMetadata
-    {
-        return $this->measurementManager->getClassMetadata($class);
     }
 
     /**
@@ -75,40 +57,23 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
-     * Checks whether we have metadata for the given class.
-     *
-     * @param string $class
-     *
-     * @return boolean
-     */
-    public function hasMetadata(string $class): bool
-    {
-        return $this->measurementManager->getMetadataFactory()->hasMetadataFor($class);
-    }
-
-    /**
      * {@inheritDoc}
-     *
-     * @throws RuntimeException
      */
     public function getNewFieldDescriptionInstance(string $class, string $name, array $options = []): FieldDescription
     {
-        if (!is_string($name)) {
-            throw new RuntimeException('The name argument must be a string');
-        }
-
         $options['route']['name'] ??= 'edit';
         $options['route']['parameters'] ??= [];
 
         [$metadata, $propertyName] = $this->getParentMetadataForProperty($class, $name);
 
-        $fieldDescription = new FieldDescription($name, $options);
-
-        if (isset($metadata->fieldMappings[$propertyName])) {
-            $fieldDescription->setFieldMapping($metadata->fieldMappings[$propertyName]);
-        }
-
-        return $fieldDescription;
+        return new FieldDescription(
+            $name,
+            $options,
+            $metadata->fieldMappings[$propertyName] ?? [],
+            [],
+            [],
+            $propertyName
+        );
     }
 
     /**
@@ -175,14 +140,6 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getParentFieldDescription(array $parentAssociationMapping, string $class): FieldDescription
-    {
-        return $this->getNewFieldDescriptionInstance($class, $parentAssociationMapping['fieldName']);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function createQuery(string $class): ProxyQuery
     {
         return new ProxyQuery($this->measurementManager->getRepository($class)->createQuery());
@@ -231,19 +188,9 @@ class ModelManager implements ModelManagerInterface
 
     /**
      * {@inheritDoc}
-     *
-     * @throws RuntimeException
      */
     public function getNormalizedIdentifier(object $model): ?string
     {
-        if ($model === null) {
-            return null;
-        }
-
-        if (!is_object($model)) {
-            throw new RuntimeException('Invalid argument, object or null required');
-        }
-
         $values = $this->getIdentifierValues($model);
 
         return implode(self::ID_SEPARATOR, $values);
@@ -268,79 +215,11 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getModelCollectionInstance($class): ArrayCollection
-    {
-        return new ArrayCollection();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function collectionRemoveElement(&$collection, &$element)
-    {
-        return $collection->removeElement($element);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function collectionAddElement(&$collection, &$element)
-    {
-        return $collection->add($element);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function collectionHasElement(&$collection, &$element): bool
-    {
-        return $collection->contains($element);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function collectionClear(&$collection)
-    {
-        return $collection->clear();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSortParameters(FieldDescriptionInterface $fieldDescription, DatagridInterface $datagrid): array
-    {
-        $values = $datagrid->getValues();
-
-        if ($values['_sort_order'] === 'ASC' && $this->isFieldAlreadySorted($fieldDescription, $datagrid)) {
-            $values['_sort_order'] = 'DESC';
-        } else {
-            $values['_sort_order'] = 'ASC';
-        }
-
-        $values['_sort_by'] = is_string($fieldDescription->getOption('sortable'))
-            ? $fieldDescription->getOption('sortable')
-            : $fieldDescription->getName();
-
-        return ['filter' => $values];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function modelReverseTransform(string $class, array $array = []): object
     {
         $hydrator = $this->measurementManager->createHydrator($class);
 
         return $hydrator->hydrate($array);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function modelTransform($class, $instance): object
-    {
-        return $instance;
     }
 
     /**
@@ -360,46 +239,9 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getDataSourceIterator(
-        DatagridInterface $datagrid,
-        array $fields,
-        ?int $firstResult = null,
-        ?int $maxResult = null
-    ): SourceIteratorInterface
-    {
-        $datagrid->buildPager();
-        $query = $datagrid->getQuery();
-
-        $query->setFirstResult($firstResult);
-        $query->setMaxResults($maxResult);
-
-        return new InfluxDBQuerySourceIterator(
-            $query instanceof ProxyQuery ? $query->getQuery() : $query,
-            $fields
-        );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getExportFields(string $class): array
     {
         return $this->getMetadata($class)->getFieldNames();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getPaginationParameters(DatagridInterface $datagrid, $page): array
-    {
-        $values = $datagrid->getValues();
-
-        if (isset($values['_sort_by']) && $values['_sort_by'] instanceof FieldDescriptionInterface) {
-            $values['_sort_by'] = $values['_sort_by']->getName();
-        }
-        $values['_page'] = $page;
-
-        return ['filter' => $values];
     }
 
     /**
@@ -426,52 +268,20 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getDefaultSortValues($class): array
-    {
-        return [
-            '_sort_order' => 'ASC',
-            '_sort_by' => $this->getModelIdentifier($class),
-            '_page' => 1,
-            '_per_page' => 25,
-        ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getDefaultPerPageOptions(string $class): array
-    {
-        return [10, 25, 50, 100, 250];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function supportsQuery(object $query): bool
     {
         return $query instanceof Query;
     }
 
     /**
-     * Checks whether field is already sorted.
+     * Returns metadata for the given class.
      *
-     * @param FieldDescriptionInterface $fieldDescription
-     * @param DatagridInterface         $datagrid
+     * @param string $class
      *
-     * @return boolean
+     * @return ClassMetadata
      */
-    private function isFieldAlreadySorted(
-        FieldDescriptionInterface $fieldDescription,
-        DatagridInterface $datagrid
-    ): bool
+    private function getMetadata(string $class): ClassMetadata
     {
-        $values = $datagrid->getValues();
-
-        if (!isset($values['_sort_by']) || !$values['_sort_by'] instanceof FieldDescriptionInterface) {
-            return false;
-        }
-
-        return $values['_sort_by']->getName() === $fieldDescription->getName()
-            || $values['_sort_by']->getName() === $fieldDescription->getOption('sortable');
+        return $this->measurementManager->getClassMetadata($class);
     }
 }
