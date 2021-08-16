@@ -1,6 +1,6 @@
 <?php
 
-namespace Javer\InfluxDB\AdminBundle\Guesser;
+namespace Javer\InfluxDB\AdminBundle\FieldDescription;
 
 use Javer\InfluxDB\AdminBundle\Filter\BooleanFilter;
 use Javer\InfluxDB\AdminBundle\Filter\DateTimeFilter;
@@ -8,7 +8,8 @@ use Javer\InfluxDB\AdminBundle\Filter\NumberFilter;
 use Javer\InfluxDB\AdminBundle\Filter\StringFilter;
 use Javer\InfluxDB\AdminBundle\Model\MissingPropertyMetadataException;
 use Javer\InfluxDB\ODM\Types\Type;
-use Sonata\AdminBundle\Model\ModelManagerInterface;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
+use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 use Sonata\Form\Type\BooleanType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -16,41 +17,31 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Guess\Guess;
 use Symfony\Component\Form\Guess\TypeGuess;
 
-/**
- * Class FilterTypeGuesser
- *
- * @package Javer\InfluxDB\AdminBundle\Guesser
- */
-class FilterTypeGuesser extends AbstractTypeGuesser
+final class FilterTypeGuesser implements TypeGuesserInterface
 {
     /**
      * {@inheritDoc}
      *
      * @throws MissingPropertyMetadataException
      */
-    public function guessType(string $class, string $property, ModelManagerInterface $modelManager): ?TypeGuess
+    public function guess(FieldDescriptionInterface $fieldDescription): TypeGuess
     {
-        if (!$ret = $this->getParentMetadataForProperty($class, $property, $modelManager)) {
-            return null;
-        }
-
         $options = [
+            'parent_association_mappings' => $fieldDescription->getParentAssociationMappings(),
+            'field_name' => $fieldDescription->getFieldName(),
             'field_type' => null,
             'field_options' => [],
             'options' => [],
         ];
 
-        [$metadata, $propertyName, $parentAssociationMappings] = $ret;
-
-        $options['parent_association_mappings'] = $parentAssociationMappings;
-
-        if (!array_key_exists($propertyName, $metadata->fieldMappings)) {
-            throw new MissingPropertyMetadataException($class, $property);
+        if ([] === $fieldDescription->getFieldMapping()) {
+            throw new MissingPropertyMetadataException(
+                $fieldDescription->getAdmin()->getClass(),
+                $fieldDescription->getFieldName()
+            );
         }
 
-        $options['field_name'] = $metadata->fieldMappings[$propertyName]['fieldName'];
-
-        switch ($metadata->getTypeOfField($propertyName)) {
+        switch ($fieldDescription->getMappingType()) {
             case Type::TIMESTAMP:
                 $options['field_type'] = DateTimeType::class;
                 return new TypeGuess(DateTimeFilter::class, $options, Guess::HIGH_CONFIDENCE);

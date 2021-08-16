@@ -4,11 +4,6 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Sonata\Form\Type\DateTimeRangePickerType;
 
-/**
- * Class DateTimeRangeFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class DateTimeRangeFilter extends AbstractDateFilter
 {
     protected bool $range = true;
@@ -18,8 +13,10 @@ class DateTimeRangeFilter extends AbstractDateFilter
     /**
      * {@inheritDoc}
      */
-    public function getFieldType(): string
+    public function getDefaultOptions(): array
     {
-        return $this->getOption('field_type', DateTimeRangePickerType::class);
+        return array_merge(parent::getDefaultOptions(), [
+            'field_type' => DateTimeRangePickerType::class,
+        ]);
     }
 }

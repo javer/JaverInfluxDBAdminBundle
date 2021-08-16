@@ -2,16 +2,12 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Filter\Model\FilterData;
 use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 use Sonata\Form\Type\BooleanType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 
-/**
- * Class BooleanFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class BooleanFilter extends Filter
 {
     /**
@@ -43,23 +39,20 @@ class BooleanFilter extends Filter
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    protected function filter(ProxyQueryInterface $query, string $field, FilterData $data): void
     {
-        if (
-            !$data
-            || !is_array($data)
-            || !array_key_exists('type', $data)
-            || !array_key_exists('value', $data)
-            || !in_array($data['value'], [BooleanType::TYPE_NO, BooleanType::TYPE_YES], true)
-        ) {
+        if (!$data->hasValue()) {
+            return;
+        }
+
+        $value = $data->getValue();
+
+        if (!in_array($value, [BooleanType::TYPE_NO, BooleanType::TYPE_YES], true)) {
             return;
         }
 
         $field = $this->quoteFieldName($field);
-        $value = $this->quoteFieldValue($data['value'] === BooleanType::TYPE_YES ? 1 : 0);
+        $value = $this->quoteFieldValue($value === BooleanType::TYPE_YES ? 1 : 0);
 
         $this->applyWhere($query, sprintf('%s = %s', $field, $value));
     }

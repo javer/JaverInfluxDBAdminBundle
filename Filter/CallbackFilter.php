@@ -2,17 +2,14 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
+use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use RuntimeException;
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Filter\Model\FilterData;
 use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use UnexpectedValueException;
 
-/**
- * Class CallbackFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class CallbackFilter extends Filter
 {
     /**
@@ -22,9 +19,6 @@ class CallbackFilter extends Filter
     {
         return [
             'callback' => null,
-            'active_callback' => static function ($data) {
-                return isset($data['value']) && $data['value'];
-            },
             'field_type' => TextType::class,
             'operator_type' => HiddenType::class,
             'operator_options' => [],
@@ -49,11 +43,10 @@ class CallbackFilter extends Filter
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws RuntimeException
+     * @throws UnexpectedValueException
      */
-    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    protected function filter(ProxyQueryInterface $query, string $field, FilterData $data): void
     {
         if (!is_callable($this->getOption('callback'))) {
             throw new RuntimeException(
@@ -61,14 +54,15 @@ class CallbackFilter extends Filter
             );
         }
 
-        call_user_func($this->getOption('callback'), $query, $field, $data);
+        $isActive = call_user_func($this->getOption('callback'), $query, $field, $data);
 
-        if (is_callable($this->getOption('active_callback'))) {
-            $this->active = call_user_func($this->getOption('active_callback'), $data);
-
-            return;
+        if (!is_bool($isActive)) {
+            throw new UnexpectedValueException(sprintf(
+                'The callback should return a boolean, %s returned',
+                is_object($isActive) ? 'instance of "' . get_class($isActive) . '"' : '"' . gettype($isActive) . '"'
+            ));
         }
 
-        $this->active = true;
+        $this->setActive($isActive);
     }
 }

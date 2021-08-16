@@ -5,20 +5,10 @@ namespace Javer\InfluxDB\AdminBundle\Datagrid;
 use Javer\InfluxDB\ODM\Query\Query;
 use Sonata\AdminBundle\Datagrid\Pager as BasePager;
 
-/**
- * Class Pager
- *
- * @package Javer\InfluxDB\AdminBundle\Datagrid
- */
 class Pager extends BasePager
 {
     private int $resultsCount = 0;
 
-    /**
-     * Computes count of results.
-     *
-     * @return integer
-     */
     public function countResults(): int
     {
         return $this->resultsCount;
@@ -39,9 +29,6 @@ class Pager extends BasePager
         return $query->execute();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function init(): void
     {
         $this->resultsCount = $this->computeResultsCount();
@@ -64,11 +51,6 @@ class Pager extends BasePager
         }
     }
 
-    /**
-     * Computes count of results.
-     *
-     * @return integer
-     */
     private function computeResultsCount(): int
     {
         /** @var Query $countQuery */

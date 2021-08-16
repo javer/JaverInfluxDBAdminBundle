@@ -1,0 +1,8 @@
+parameters:
+    level: 5
+    paths:
+        - ./
+    excludePaths:
+        analyse:
+            - vendor
+            - DependencyInjection/Configuration.php

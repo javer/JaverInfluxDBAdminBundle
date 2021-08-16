@@ -7,16 +7,8 @@ use Javer\InfluxDB\AdminBundle\DependencyInjection\Compiler\AddTemplatesCompiler
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-/**
- * Class JaverInfluxDBAdminBundle
- *
- * @package Javer\InfluxDB\AdminBundle
- */
-class JaverInfluxDBAdminBundle extends Bundle
+final class JaverInfluxDBAdminBundle extends Bundle
 {
-    /**
-     * {@inheritDoc}
-     */
     public function build(ContainerBuilder $container): void
     {
         $container->addCompilerPass(new AddGuesserCompilerPass());

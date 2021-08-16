@@ -4,18 +4,15 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Sonata\Form\Type\DatePickerType;
 
-/**
- * Class DateFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class DateFilter extends AbstractDateFilter
 {
     /**
      * {@inheritDoc}
      */
-    public function getFieldType(): string
+    public function getDefaultOptions(): array
     {
-        return $this->getOption('field_type', DatePickerType::class);
+        return array_merge(parent::getDefaultOptions(), [
+            'field_type' => DatePickerType::class,
+        ]);
     }
 }

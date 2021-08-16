@@ -1,32 +1,24 @@
 <?php
 
-namespace Javer\InfluxDB\AdminBundle\Guesser;
+namespace Javer\InfluxDB\AdminBundle\FieldDescription;
 
 use Javer\InfluxDB\ODM\Types\Type;
-use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
-use Sonata\AdminBundle\Model\ModelManagerInterface;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
+use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 use Symfony\Component\Form\Guess\Guess;
 use Symfony\Component\Form\Guess\TypeGuess;
 
-/**
- * Class TypeGuesser
- *
- * @package Javer\InfluxDB\AdminBundle\Guesser
- */
-class TypeGuesser extends AbstractTypeGuesser
+final class TypeGuesser implements TypeGuesserInterface
 {
-    /**
-     * {@inheritDoc}
-     */
-    public function guessType(string $class, string $property, ModelManagerInterface $modelManager): ?TypeGuess
+    public function guess(FieldDescriptionInterface $fieldDescription): TypeGuess
     {
-        if (!$parentMetadata = $this->getParentMetadataForProperty($class, $property, $modelManager)) {
+        $fieldMapping = $fieldDescription->getFieldMapping();
+
+        if ([] === $fieldMapping) {
             return new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::LOW_CONFIDENCE);
         }
 
-        [$metadata, $propertyName] = $parentMetadata;
-
-        switch ($metadata->getTypeOfField($propertyName)) {
+        switch ($fieldDescription->getMappingType()) {
             case Type::TIMESTAMP:
                 return new TypeGuess(FieldDescriptionInterface::TYPE_DATETIME, [], Guess::HIGH_CONFIDENCE);
             case Type::BOOLEAN:

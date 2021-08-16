@@ -3,98 +3,41 @@
 namespace Javer\InfluxDB\AdminBundle\Model;
 
 use InvalidArgumentException;
-use Javer\InfluxDB\AdminBundle\Admin\FieldDescription;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQuery;
+use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Javer\InfluxDB\ODM\Mapping\ClassMetadata;
 use Javer\InfluxDB\ODM\MeasurementManager;
 use Javer\InfluxDB\ODM\Query\Query;
 use Javer\InfluxDB\ODM\Types\Type;
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use TypeError;
 
-/**
- * Class ModelManager
- *
- * @package Javer\InfluxDB\AdminBundle\Model
- */
-class ModelManager implements ModelManagerInterface
+final class ModelManager implements ModelManagerInterface
 {
     public const ID_SEPARATOR = '-';
 
     private MeasurementManager $measurementManager;
 
-    /**
-     * ModelManager constructor.
-     *
-     * @param MeasurementManager $measurementManager
-     */
-    public function __construct(MeasurementManager $measurementManager)
+    private PropertyAccessorInterface $propertyAccessor;
+
+    public function __construct(MeasurementManager $measurementManager, PropertyAccessorInterface $propertyAccessor)
     {
         $this->measurementManager = $measurementManager;
+        $this->propertyAccessor = $propertyAccessor;
     }
 
-    /**
-     * Returns the model's metadata holding the fully qualified property, and the last property name.
-     *
-     * @param string $baseClass        The base class of the model holding the fully qualified property
-     * @param string $propertyFullName The name of the fully qualified property (dot separated property string)
-     *
-     * @return array
-     */
-    public function getParentMetadataForProperty(string $baseClass, string $propertyFullName): array
-    {
-        $nameElements = explode('.', $propertyFullName);
-        $lastPropertyName = array_pop($nameElements);
-        $class = $baseClass;
-        $parentAssociationMappings = [];
-
-        foreach ($nameElements as $nameElement) {
-            $metadata = $this->getMetadata($class);
-            $class = $metadata->getAssociationTargetClass($nameElement);
-        }
-
-        return [$this->getMetadata($class), $lastPropertyName, $parentAssociationMappings];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getNewFieldDescriptionInstance(string $class, string $name, array $options = []): FieldDescription
-    {
-        $options['route']['name'] ??= 'edit';
-        $options['route']['parameters'] ??= [];
-
-        [$metadata, $propertyName] = $this->getParentMetadataForProperty($class, $name);
-
-        return new FieldDescription(
-            $name,
-            $options,
-            $metadata->fieldMappings[$propertyName] ?? [],
-            [],
-            [],
-            $propertyName
-        );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function create(object $object): void
     {
         $this->measurementManager->persist($object);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function update(object $object): void
     {
         $this->measurementManager->persist($object);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function delete(object $object): void
     {
         $this->measurementManager->remove($object);
@@ -126,31 +69,23 @@ class ModelManager implements ModelManagerInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @throws TypeError
      */
-    public function batchDelete(string $class, ProxyQueryInterface $queryProxy): void
+    public function batchDelete(string $class, BaseProxyQueryInterface $query): void
     {
-        /** @var Query $query */
-        $query = $queryProxy->getQuery();
+        if (!$query instanceof ProxyQueryInterface) {
+            throw new TypeError(sprintf('The query MUST implement %s.', ProxyQueryInterface::class));
+        }
 
-        foreach ($query->getResult() as $object) {
+        foreach ($query->getQuery()->getResult() as $object) {
             $this->measurementManager->remove($object);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function createQuery(string $class): ProxyQuery
     {
         return new ProxyQuery($this->measurementManager->getRepository($class)->createQuery());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getModelIdentifier(string $class): string
-    {
-        return $this->getMetadata($class)->identifier;
     }
 
     /**
@@ -186,9 +121,6 @@ class ModelManager implements ModelManagerInterface
         return $this->getMetadata($class)->getIdentifierFieldNames();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getNormalizedIdentifier(object $model): ?string
     {
         $values = $this->getIdentifierValues($model);
@@ -196,9 +128,6 @@ class ModelManager implements ModelManagerInterface
         return implode(self::ID_SEPARATOR, $values);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getUrlSafeIdentifier(object $model): ?string
     {
         return $this->getNormalizedIdentifier($model);
@@ -207,19 +136,15 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      */
-    public function getModelInstance(string $class): object
+    public function reverseTransform(object $object, array $array = []): void
     {
-        return $this->getMetadata($class)->newInstance();
-    }
+        $metadata = $this->getMetadata(get_class($object));
 
-    /**
-     * {@inheritDoc}
-     */
-    public function modelReverseTransform(string $class, array $array = []): object
-    {
-        $hydrator = $this->measurementManager->createHydrator($class);
+        foreach ($array as $name => $value) {
+            $property = $this->getFieldName($metadata, $name);
 
-        return $hydrator->hydrate($array);
+            $this->propertyAccessor->setValue($object, $property, $value);
+        }
     }
 
     /**
@@ -247,17 +172,21 @@ class ModelManager implements ModelManagerInterface
     /**
      * {@inheritDoc}
      *
+     * @throws TypeError
      * @throws InvalidArgumentException
      */
-    public function addIdentifiersToQuery(string $class, ProxyQueryInterface $query, array $idx): void
+    public function addIdentifiersToQuery(string $class, BaseProxyQueryInterface $query, array $idx): void
     {
+        if (!$query instanceof ProxyQueryInterface) {
+            throw new TypeError(sprintf('The query MUST implement %s.', ProxyQueryInterface::class));
+        }
+
         if (count($idx) !== 1) {
             throw new InvalidArgumentException(
                 'InfluxDB does not support using OR in the WHERE clause to specify multiple time ranges'
             );
         }
 
-        /** @var Query $queryBuilder */
         $queryBuilder = $query->getQuery();
 
         $classMetadata = $this->getMetadata($class);
@@ -265,20 +194,30 @@ class ModelManager implements ModelManagerInterface
         $queryBuilder->where($classMetadata->identifier, array_values($idx)[0]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supportsQuery(object $query): bool
     {
         return $query instanceof Query;
     }
 
+    private function getFieldName(ClassMetadata $metadata, string $name): string
+    {
+        if (array_key_exists($name, $metadata->fieldMappings)) {
+            return $metadata->fieldMappings[$name]['fieldName'];
+        }
+
+        return $name;
+    }
+
     /**
-     * Returns metadata for the given class.
+     * Returns metadata for the class.
      *
      * @param string $class
      *
      * @return ClassMetadata
+     *
+     * @phpstan-template T of object
+     * @phpstan-param    class-string<T> $class
+     * @phpstan-return   ClassMetadata<T>
      */
     private function getMetadata(string $class): ClassMetadata
     {

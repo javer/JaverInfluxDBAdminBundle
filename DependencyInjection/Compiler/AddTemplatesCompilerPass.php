@@ -5,16 +5,8 @@ namespace Javer\InfluxDB\AdminBundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-/**
- * Class AddTemplatesCompilerPass
- *
- * @package Javer\InfluxDB\AdminBundle\DependencyInjection\Compiler
- */
 class AddTemplatesCompilerPass implements CompilerPassInterface
 {
-    /**
-     * {@inheritDoc}
-     */
     public function process(ContainerBuilder $container): void
     {
         foreach ($container->findTaggedServiceIds('sonata.admin') as $id => $attributes) {

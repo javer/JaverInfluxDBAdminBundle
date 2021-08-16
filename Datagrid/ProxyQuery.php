@@ -3,14 +3,9 @@
 namespace Javer\InfluxDB\AdminBundle\Datagrid;
 
 use Javer\InfluxDB\ODM\Query\Query;
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 
-/**
- * Class ProxyQuery
- *
- * @package Javer\InfluxDB\AdminBundle\Datagrid
- */
-class ProxyQuery implements ProxyQueryInterface
+class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
 {
     private Query $query;
 
@@ -22,37 +17,29 @@ class ProxyQuery implements ProxyQueryInterface
 
     private ?int $maxResults = null;
 
-    /**
-     * ProxyQuery constructor.
-     *
-     * @param Query $query
-     */
     public function __construct(Query $query)
     {
         $this->query = $query;
     }
 
     /**
-     * {@inheritDoc}
+     * Call method.
+     *
+     * @param string  $name
+     * @param mixed[] $args
+     *
+     * @return mixed
      */
     public function __call(string $name, array $args)
     {
         return call_user_func_array([$this->query, $name], $args);
     }
 
-    /**
-     * Clones the object.
-     */
     public function __clone()
     {
         $this->query = clone $this->query;
     }
 
-    /**
-     * Returns query.
-     *
-     * @return Query
-     */
     public function getQuery(): Query
     {
         return $this->query;
@@ -61,7 +48,7 @@ class ProxyQuery implements ProxyQueryInterface
     /**
      * {@inheritDoc}
      */
-    public function execute(array $params = [], ?int $hydrationMode = null): array
+    public function execute(): array
     {
         $query = clone $this->query;
 
@@ -71,7 +58,7 @@ class ProxyQuery implements ProxyQueryInterface
             $query->orderBy($sortBy, $this->getSortOrder());
         }
 
-        return $query->execute($hydrationMode);
+        return $query->execute();
     }
 
     /**
@@ -79,22 +66,22 @@ class ProxyQuery implements ProxyQueryInterface
      */
     public function setSortBy(array $parentAssociationMappings, array $fieldMapping): self
     {
-        $this->sortBy = $fieldMapping['fieldName'];
+        $parents = '';
+
+        foreach ($parentAssociationMappings as $mapping) {
+            $parents .= $mapping['fieldName'] . '.';
+        }
+
+        $this->sortBy = $parents . $fieldMapping['fieldName'];
 
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getSortBy(): ?string
     {
         return $this->sortBy;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function setSortOrder(string $sortOrder): self
     {
         $this->sortOrder = $sortOrder;
@@ -102,9 +89,6 @@ class ProxyQuery implements ProxyQueryInterface
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getSortOrder(): ?string
     {
         return $this->sortOrder;
@@ -118,9 +102,6 @@ class ProxyQuery implements ProxyQueryInterface
         return $this->query->getSingleScalarResult();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function setFirstResult(?int $firstResult): self
     {
         $this->firstResult = $firstResult;
@@ -130,17 +111,11 @@ class ProxyQuery implements ProxyQueryInterface
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFirstResult(): ?int
     {
         return $this->firstResult;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function setMaxResults(?int $maxResults): self
     {
         $this->maxResults = $maxResults;
@@ -150,9 +125,6 @@ class ProxyQuery implements ProxyQueryInterface
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getMaxResults(): ?int
     {
         return $this->maxResults;

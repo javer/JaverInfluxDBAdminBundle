@@ -4,11 +4,6 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 
-/**
- * Class ChoiceFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class ChoiceFilter extends StringFilter
 {
     /**

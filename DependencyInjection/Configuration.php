@@ -5,16 +5,8 @@ namespace Javer\InfluxDB\AdminBundle\DependencyInjection;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
-/**
- * Class Configuration
- *
- * @package Javer\InfluxDB\AdminBundle\DependencyInjection
- */
 class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritDoc}
-     */
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('javer_influx_db_admin');
@@ -42,7 +34,7 @@ class Configuration implements ConfigurationInterface
                                 ->arrayNode('show')
                                     ->useAttributeAsKey('name')
                                     ->prototype('scalar')->end()
-                            ->end()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()

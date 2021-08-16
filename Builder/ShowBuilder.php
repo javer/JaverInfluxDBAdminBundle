@@ -3,28 +3,25 @@
 namespace Javer\InfluxDB\AdminBundle\Builder;
 
 use RuntimeException;
-use Sonata\AdminBundle\Admin\AdminInterface;
-use Sonata\AdminBundle\Admin\FieldDescriptionCollection;
-use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Builder\ShowBuilderInterface;
-use Sonata\AdminBundle\Guesser\TypeGuesserInterface;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionCollection;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
+use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 
-/**
- * Class ShowBuilder
- *
- * @package Javer\InfluxDB\AdminBundle\Builder
- */
 class ShowBuilder implements ShowBuilderInterface
 {
     private TypeGuesserInterface $guesser;
 
+    /**
+     * @var string[]
+     */
     private array $templates;
 
     /**
      * ShowBuilder constructor.
      *
      * @param TypeGuesserInterface $guesser
-     * @param array                $templates
+     * @param string[]             $templates
      */
     public function __construct(TypeGuesserInterface $guesser, array $templates)
     {
@@ -50,22 +47,22 @@ class ShowBuilder implements ShowBuilderInterface
     public function addField(
         FieldDescriptionCollection $list,
         ?string $type,
-        FieldDescriptionInterface $fieldDescription,
-        AdminInterface $admin
+        FieldDescriptionInterface $fieldDescription
     ): void
     {
         if ($type === null) {
-            $guessType = $this->guesser
-                ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
+            $guessType = $this->guesser->guess($fieldDescription);
+
+            assert($guessType !== null);
 
             $fieldDescription->setType($guessType->getType());
         } else {
             $fieldDescription->setType($type);
         }
 
-        $this->fixFieldDescription($admin, $fieldDescription);
+        $this->fixFieldDescription($fieldDescription);
 
-        $admin->addShowFieldDescription($fieldDescription->getName(), $fieldDescription);
+        $fieldDescription->getAdmin()->addShowFieldDescription($fieldDescription->getName(), $fieldDescription);
 
         $list->add($fieldDescription);
     }
@@ -73,18 +70,19 @@ class ShowBuilder implements ShowBuilderInterface
     /**
      * Fixes field description.
      *
-     * @param AdminInterface            $admin
      * @param FieldDescriptionInterface $fieldDescription
      *
      * @throws RuntimeException
      */
-    public function fixFieldDescription(AdminInterface $admin, FieldDescriptionInterface $fieldDescription): void
+    public function fixFieldDescription(FieldDescriptionInterface $fieldDescription): void
     {
-        $fieldDescription->setAdmin($admin);
-
         if (!$fieldDescription->getType()) {
             throw new RuntimeException(
-                sprintf('Please define a type for field `%s` in `%s`', $fieldDescription->getName(), get_class($admin))
+                sprintf(
+                    'Please define a type for field `%s` in `%s`',
+                    $fieldDescription->getName(),
+                    get_class($fieldDescription->getAdmin())
+                )
             );
         }
 
@@ -93,13 +91,6 @@ class ShowBuilder implements ShowBuilderInterface
         }
     }
 
-    /**
-     * Returns template for the given type.
-     *
-     * @param string $type
-     *
-     * @return string|null
-     */
     private function getTemplate(string $type): ?string
     {
         return $this->templates[$type] ?? null;

@@ -5,23 +5,18 @@ namespace Javer\InfluxDB\AdminBundle\Builder;
 use Javer\InfluxDB\AdminBundle\Datagrid\Pager as InfluxDBPager;
 use RuntimeException;
 use Sonata\AdminBundle\Admin\AdminInterface;
-use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Builder\DatagridBuilderInterface;
 use Sonata\AdminBundle\Datagrid\Datagrid;
 use Sonata\AdminBundle\Datagrid\DatagridInterface;
 use Sonata\AdminBundle\Datagrid\Pager;
 use Sonata\AdminBundle\Datagrid\SimplePager;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
+use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 use Sonata\AdminBundle\Filter\FilterFactoryInterface;
-use Sonata\AdminBundle\Guesser\TypeGuesserInterface;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormFactoryInterface;
 
-/**
- * Class DatagridBuilder
- *
- * @package Javer\InfluxDB\AdminBundle\Builder
- */
-class DatagridBuilder implements DatagridBuilderInterface
+final class DatagridBuilder implements DatagridBuilderInterface
 {
     private FilterFactoryInterface $filterFactory;
 
@@ -31,14 +26,6 @@ class DatagridBuilder implements DatagridBuilderInterface
 
     private bool $csrfTokenEnabled;
 
-    /**
-     * DatagridBuilder constructor.
-     *
-     * @param FormFactoryInterface   $formFactory
-     * @param FilterFactoryInterface $filterFactory
-     * @param TypeGuesserInterface   $guesser
-     * @param boolean                $csrfTokenEnabled
-     */
     public function __construct(
         FormFactoryInterface $formFactory,
         FilterFactoryInterface $filterFactory,
@@ -52,18 +39,8 @@ class DatagridBuilder implements DatagridBuilderInterface
         $this->csrfTokenEnabled = $csrfTokenEnabled;
     }
 
-    /**
-     * Fixes field description.
-     *
-     * @param AdminInterface            $admin
-     * @param FieldDescriptionInterface $fieldDescription
-     *
-     * @throws RuntimeException
-     */
-    public function fixFieldDescription(AdminInterface $admin, FieldDescriptionInterface $fieldDescription): void
+    public function fixFieldDescription(FieldDescriptionInterface $fieldDescription): void
     {
-        $fieldDescription->setAdmin($admin);
-
         if ($fieldDescription->getFieldMapping() !== []) {
             $fieldDescription->setOption(
                 'field_mapping',
@@ -100,19 +77,16 @@ class DatagridBuilder implements DatagridBuilderInterface
         $fieldDescription->mergeOption('field_options', ['required' => false]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function addFilter(
         DatagridInterface $datagrid,
         ?string $type,
-        FieldDescriptionInterface $fieldDescription,
-        AdminInterface $admin
+        FieldDescriptionInterface $fieldDescription
     ): void
     {
         if ($type === null) {
-            $guessType = $this->guesser
-                ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
+            $guessType = $this->guesser->guess($fieldDescription);
+
+            assert($guessType !== null);
 
             $type = $guessType->getType();
 
@@ -131,9 +105,9 @@ class DatagridBuilder implements DatagridBuilderInterface
             $fieldDescription->setType($type);
         }
 
-        $this->fixFieldDescription($admin, $fieldDescription);
+        $this->fixFieldDescription($fieldDescription);
 
-        $admin->addFilterFieldDescription($fieldDescription->getName(), $fieldDescription);
+        $fieldDescription->getAdmin()->addFilterFieldDescription($fieldDescription->getName(), $fieldDescription);
 
         $filter = $this->filterFactory->create($fieldDescription->getName(), $type, $fieldDescription->getOptions());
 

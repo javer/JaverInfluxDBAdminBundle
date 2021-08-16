@@ -3,12 +3,14 @@ services:
         class: Javer\InfluxDB\AdminBundle\Model\ModelManager
         arguments:
             - '@javer_influxdb.odm.measurement_manager'
+            - '@property_accessor'
         tags: ['sonata.admin.manager']
 
     sonata.admin.builder.influxdb_form:
         class: Javer\InfluxDB\AdminBundle\Builder\FormContractor
         arguments:
             - '@form.factory'
+            - '@form.registry'
 
     sonata.admin.builder.influxdb_list:
         class: Javer\InfluxDB\AdminBundle\Builder\ListBuilder
@@ -17,11 +19,11 @@ services:
             - []
 
     sonata.admin.guesser.influxdb_list:
-        class: Javer\InfluxDB\AdminBundle\Guesser\TypeGuesser
+        class: Javer\InfluxDB\AdminBundle\FieldDescription\TypeGuesser
         tags: ['sonata.admin.guesser.influxdb_list']
 
     sonata.admin.guesser.influxdb_list_chain:
-        class: Sonata\AdminBundle\Guesser\TypeGuesserChain
+        class: Sonata\AdminBundle\FieldDescription\TypeGuesserChain
         arguments:
             - ['@sonata.admin.guesser.influxdb_list']
 
@@ -32,13 +34,13 @@ services:
             - []
 
     sonata.admin.guesser.influxdb_show:
-        class: Javer\InfluxDB\AdminBundle\Guesser\TypeGuesser
+        class: Javer\InfluxDB\AdminBundle\FieldDescription\TypeGuesser
         tags: ['sonata.admin.guesser.influxdb_show']
 
     sonata.admin.guesser.influxdb_show_chain:
-        class: Sonata\AdminBundle\Guesser\TypeGuesserChain
+        class: Sonata\AdminBundle\FieldDescription\TypeGuesserChain
         arguments:
-            - ['@sonata.admin.guesser.influxdb_list']
+            - ['@sonata.admin.guesser.influxdb_show']
 
     sonata.admin.builder.influxdb_datagrid:
         class: Javer\InfluxDB\AdminBundle\Builder\DatagridBuilder
@@ -49,11 +51,11 @@ services:
             - '%form.type_extension.csrf.enabled%'
 
     sonata.admin.guesser.influxdb_datagrid:
-        class: Javer\InfluxDB\AdminBundle\Guesser\FilterTypeGuesser
+        class: Javer\InfluxDB\AdminBundle\FieldDescription\FilterTypeGuesser
         tags: ['sonata.admin.guesser.influxdb_datagrid']
 
     sonata.admin.guesser.influxdb_datagrid_chain:
-        class: Sonata\AdminBundle\Guesser\TypeGuesserChain
+        class: Sonata\AdminBundle\FieldDescription\TypeGuesserChain
         arguments:
             - ['@sonata.admin.guesser.influxdb_datagrid']
 
@@ -104,3 +106,8 @@ services:
 
     sonata.admin.data_source.influxdb:
         class: Javer\InfluxDB\AdminBundle\Exporter\DataSource
+
+    sonata.admin.field_description_factory.influxdb:
+        class: Javer\InfluxDB\AdminBundle\FieldDescription\FieldDescriptionFactory
+        arguments:
+            - '@javer_influxdb.odm.measurement_manager'

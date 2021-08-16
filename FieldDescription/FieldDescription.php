@@ -1,30 +1,17 @@
 <?php
 
-namespace Javer\InfluxDB\AdminBundle\Admin;
+namespace Javer\InfluxDB\AdminBundle\FieldDescription;
 
 use RuntimeException;
-use Sonata\AdminBundle\Admin\BaseFieldDescription;
+use Sonata\AdminBundle\FieldDescription\BaseFieldDescription;
 
-/**
- * Class FieldDescription
- *
- * @package Javer\InfluxDB\AdminBundle\Admin
- */
-class FieldDescription extends BaseFieldDescription
+final class FieldDescription extends BaseFieldDescription
 {
-    /**
-     * Returns target model.
-     *
-     * @return string|null
-     */
     public function getTargetModel(): ?string
     {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function isIdentifier(): bool
     {
         return $this->fieldMapping['id'] ?? false;
@@ -39,7 +26,17 @@ class FieldDescription extends BaseFieldDescription
             $object = $this->getFieldValue($object, $parentAssociationMapping['fieldName']);
         }
 
-        return $this->getFieldValue($object, $this->getFieldName());
+        return $this->getFieldValue($object, $this->fieldName);
+    }
+
+    public function describesSingleValuedAssociation(): bool
+    {
+        return false;
+    }
+
+    public function describesCollectionValuedAssociation(): bool
+    {
+        return false;
     }
 
     /**
@@ -49,8 +46,8 @@ class FieldDescription extends BaseFieldDescription
     {
         $this->associationMapping = $associationMapping;
 
-        $this->type = $this->type ?: (string) $associationMapping['type'];
         $this->mappingType = $this->mappingType ?: $associationMapping['type'];
+        $this->fieldName = $associationMapping['fieldName'];
     }
 
     /**
@@ -60,8 +57,8 @@ class FieldDescription extends BaseFieldDescription
     {
         $this->fieldMapping = $fieldMapping;
 
-        $this->type = $this->type ?: (string) $fieldMapping['type'];
         $this->mappingType = $this->mappingType ?: $fieldMapping['type'];
+        $this->fieldName = $this->fieldName ?: $fieldMapping['fieldName'];
     }
 
     /**

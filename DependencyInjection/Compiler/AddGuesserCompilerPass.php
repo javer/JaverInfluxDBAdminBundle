@@ -6,16 +6,8 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-/**
- * Class AddGuesserCompilerPass
- *
- * @package Javer\InfluxDB\AdminBundle\DependencyInjection\Compiler
- */
 class AddGuesserCompilerPass implements CompilerPassInterface
 {
-    /**
-     * {@inheritDoc}
-     */
     public function process(ContainerBuilder $container): void
     {
         $this->addGuessersToBuilder(
@@ -37,13 +29,6 @@ class AddGuesserCompilerPass implements CompilerPassInterface
         );
     }
 
-    /**
-     * Add guessers to builder.
-     *
-     * @param ContainerBuilder $container
-     * @param string           $builderDefinitionId
-     * @param string           $guessersTag
-     */
     private function addGuessersToBuilder(
         ContainerBuilder $container,
         string $builderDefinitionId,

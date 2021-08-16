@@ -2,15 +2,11 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Filter\Model\FilterData;
 use Sonata\AdminBundle\Form\Type\Filter\ChoiceType;
 use Sonata\AdminBundle\Form\Type\Operator\StringOperatorType;
 
-/**
- * Class StringFilter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 class StringFilter extends Filter
 {
     private const CHOICES = [
@@ -50,23 +46,20 @@ class StringFilter extends Filter
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function filter(ProxyQueryInterface $query, string $field, $data): void
+    protected function filter(ProxyQueryInterface $query, string $field, FilterData $data): void
     {
-        if (!$data || !is_array($data) || !array_key_exists('value', $data) || $data['value'] === null) {
+        if (!$data->hasValue()) {
             return;
         }
 
-        $data['value'] = trim($data['value']);
+        $value = trim((string) ($data->getValue() ?? ''));
 
-        if ($data['value'] === '') {
+        if ($value === '') {
             return;
         }
 
         $field = $this->quoteFieldName($field);
-        $type = $data['type'] ?? $this->getOption('operator_default_type');
+        $type = $data->getType() ?? $this->getOption('operator_default_type');
         $operator = $this->getOperator((int) $type);
         $format = "'%s'";
 
@@ -78,18 +71,11 @@ class StringFilter extends Filter
             $format = '/%s$/';
         }
 
-        $value = $type === StringOperatorType::TYPE_EQUAL ? $data['value'] : preg_quote($data['value'], '/');
+        $value = $type === StringOperatorType::TYPE_EQUAL ? $value : preg_quote($value, '/');
 
         $this->applyWhere($query, sprintf('%s %s ' . $format, $field, $operator, $value));
     }
 
-    /**
-     * Returns operator for the given type.
-     *
-     * @param integer $type
-     *
-     * @return string
-     */
     private function getOperator(int $type): string
     {
         return self::CHOICES[$type] ?? self::CHOICES[StringOperatorType::TYPE_EQUAL];

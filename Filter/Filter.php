@@ -2,33 +2,24 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
-use Javer\InfluxDB\ODM\Query\Query;
-use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Filter as BaseFilter;
+use Sonata\AdminBundle\Filter\Model\FilterData;
+use TypeError;
 
-/**
- * Class Filter
- *
- * @package Javer\InfluxDB\AdminBundle\Filter
- */
 abstract class Filter extends BaseFilter
 {
-    protected bool $active = false;
-
     /**
-     * {@inheritDoc}
+     * @throws TypeError
      */
-    public function apply(ProxyQueryInterface $query, array $filterData): void
+    public function apply(BaseProxyQueryInterface $query, FilterData $filterData): void
     {
+        if (!$query instanceof ProxyQueryInterface) {
+            throw new TypeError(sprintf('The query MUST implement "%s".', ProxyQueryInterface::class));
+        }
+
         $this->filter($query, $this->getFieldName(), $filterData);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isActive(): bool
-    {
-        return $this->active;
     }
 
     /**
@@ -39,39 +30,16 @@ abstract class Filter extends BaseFilter
         return [];
     }
 
-    /**
-     * Filter.
-     *
-     * @param ProxyQueryInterface $query
-     * @param string              $field
-     * @param mixed               $data
-     */
     /* phpcs:ignore */
-    abstract protected function filter(ProxyQueryInterface $query, string $field, $data): void;
+    abstract protected function filter(ProxyQueryInterface $query, string $field, FilterData $data): void;
 
-    /**
-     * Apply where.
-     *
-     * @param ProxyQueryInterface $proxyQuery
-     * @param string              $condition
-     */
     protected function applyWhere(ProxyQueryInterface $proxyQuery, string $condition): void
     {
-        /** @var Query $queryBuilder */
-        $queryBuilder = $proxyQuery;
+        $proxyQuery->getQuery()->where($condition);
 
-        $queryBuilder->where($condition);
-
-        $this->active = true;
+        $this->setActive(true);
     }
 
-    /**
-     * Quotes field name.
-     *
-     * @param string $field
-     *
-     * @return string
-     */
     protected function quoteFieldName(string $field): string
     {
         $isId = $this->getFieldMapping()['id'] ?? false;

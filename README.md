@@ -158,22 +158,22 @@ class CpuLoadAdmin extends AbstractAdmin
 
     protected $baseRoutePattern = 'cpu_load';
 
-    protected function configureListFields(ListMapper $listMapper): void
+    protected function configureListFields(ListMapper $list): void
     {
         // ...
     }
 
-    protected function configureDatagridFilters(DatagridMapper $datagridMapper): void
+    protected function configureDatagridFilters(DatagridMapper $filter): void
     {
         // ...
     }
 
-    protected function configureShowFields(ShowMapper $showMapper): void
+    protected function configureShowFields(ShowMapper $show): void
     {
         // ...
     }
 
-    protected function configureFormFields(FormMapper $formMapper): void
+    protected function configureFormFields(FormMapper $form): void
     {
         // ...
     }
@@ -196,19 +196,19 @@ namespace App\Admin;
 
 use Sonata\AdminBundle\Admin\AbstractAdmin;
 use Sonata\AdminBundle\Datagrid\ListMapper;
-use Sonata\AdminBundle\Templating\TemplateRegistry;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
 
 class CpuLoadAdmin extends AbstractAdmin
 {
-    protected function configureListFields(ListMapper $listMapper): void
+    protected function configureListFields(ListMapper $list): void
     {
-        $listMapper
-            ->addIdentifier('time', TemplateRegistry::TYPE_DATETIME, [
+        $list
+            ->addIdentifier('time', FieldDescriptionInterface::TYPE_DATETIME, [
                 'format' => 'Y-m-d H:i:s.u',
             ])
             ->add('serverId')
             ->add('load')
-            ->add('_actions', 'actions', [
+            ->add(ListMapper::NAME_ACTIONS, ListMapper::TYPE_ACTIONS, [
                 'actions' => [
                     'show' => [],
                     'edit' => [],
@@ -223,11 +223,11 @@ Available types
 ---------------
 
 The most important option for each field is the `type`. The available types include:
-* datetime (`TemplateRegistry::TYPE_DATETIME`)
-* boolean (`TemplateRegistry::TYPE_BOOLEAN`)
-* integer (`TemplateRegistry::TYPE_INTEGER`)
-* float (`TemplateRegistry::TYPE_FLOAT`)
-* string (`TemplateRegistry::TYPE_STRING`)
+* datetime (`FieldDescriptionInterface::TYPE_DATETIME`)
+* boolean (`FieldDescriptionInterface::TYPE_BOOLEAN`)
+* integer (`FieldDescriptionInterface::TYPE_INTEGER`)
+* float (`FieldDescriptionInterface::TYPE_FLOAT`)
+* string (`FieldDescriptionInterface::TYPE_STRING`)
 
 If no type is set, the `Admin` class will use the type defined in the doctrine mapping definition.
 
@@ -248,9 +248,9 @@ use Sonata\AdminBundle\Datagrid\DatagridMapper;
 
 class CpuLoadAdmin extends AbstractAdmin
 {
-    protected function configureDatagridFilters(DatagridMapper $datagridMapper): void
+    protected function configureDatagridFilters(DatagridMapper $filter): void
     {
-        $datagridMapper
+        $filter
             ->add('time', DateTimeRangeFilter::class)
             ->add('serverId');
     }
@@ -287,9 +287,9 @@ use Sonata\AdminBundle\Form\FormMapper;
 
 class CpuLoadAdmin extends AbstractAdmin
 {
-    protected function configureFormFields(FormMapper $formMapper): void
+    protected function configureFormFields(FormMapper $form): void
     {
-        $formMapper
+        $form
             ->add('serverId')
             ->add('load');
     }

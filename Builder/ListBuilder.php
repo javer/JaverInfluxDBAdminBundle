@@ -3,28 +3,26 @@
 namespace Javer\InfluxDB\AdminBundle\Builder;
 
 use RuntimeException;
-use Sonata\AdminBundle\Admin\AdminInterface;
-use Sonata\AdminBundle\Admin\FieldDescriptionCollection;
-use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Builder\ListBuilderInterface;
-use Sonata\AdminBundle\Guesser\TypeGuesserInterface;
+use Sonata\AdminBundle\Datagrid\ListMapper;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionCollection;
+use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
+use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 
-/**
- * Class ListBuilder
- *
- * @package Javer\InfluxDB\AdminBundle\Builder
- */
-class ListBuilder implements ListBuilderInterface
+final class ListBuilder implements ListBuilderInterface
 {
     private TypeGuesserInterface $guesser;
 
+    /**
+     * @var string[]
+     */
     private array $templates;
 
     /**
      * ListBuilder constructor.
      *
      * @param TypeGuesserInterface $guesser
-     * @param array                $templates
+     * @param string[]             $templates
      */
     public function __construct(TypeGuesserInterface $guesser, array $templates)
     {
@@ -44,21 +42,19 @@ class ListBuilder implements ListBuilderInterface
         return new FieldDescriptionCollection();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function buildField(?string $type, FieldDescriptionInterface $fieldDescription, AdminInterface $admin): void
+    public function buildField(?string $type, FieldDescriptionInterface $fieldDescription): void
     {
         if ($type === null) {
-            $guessType = $this->guesser
-                ->guessType($admin->getClass(), $fieldDescription->getName(), $admin->getModelManager());
+            $guessType = $this->guesser->guess($fieldDescription);
+
+            assert($guessType !== null);
 
             $fieldDescription->setType($guessType->getType());
         } else {
             $fieldDescription->setType($type);
         }
 
-        $this->fixFieldDescription($admin, $fieldDescription);
+        $this->fixFieldDescription($fieldDescription);
     }
 
     /**
@@ -67,13 +63,12 @@ class ListBuilder implements ListBuilderInterface
     public function addField(
         FieldDescriptionCollection $list,
         ?string $type,
-        FieldDescriptionInterface $fieldDescription,
-        AdminInterface $admin
+        FieldDescriptionInterface $fieldDescription
     ): void
     {
-        $this->buildField($type, $fieldDescription, $admin);
+        $this->buildField($type, $fieldDescription);
 
-        $admin->addListFieldDescription($fieldDescription->getName(), $fieldDescription);
+        $fieldDescription->getAdmin()->addListFieldDescription($fieldDescription->getName(), $fieldDescription);
 
         $list->add($fieldDescription);
     }
@@ -83,13 +78,14 @@ class ListBuilder implements ListBuilderInterface
      *
      * @throws RuntimeException
      */
-    public function fixFieldDescription(AdminInterface $admin, FieldDescriptionInterface $fieldDescription): void
+    public function fixFieldDescription(FieldDescriptionInterface $fieldDescription): void
     {
-        if ($fieldDescription->getName() === '_action' || $fieldDescription->getType() === 'actions') {
+        if (
+            $fieldDescription->getName() === ListMapper::NAME_ACTIONS
+            || $fieldDescription->getType() === ListMapper::TYPE_ACTIONS
+        ) {
             $this->buildActionFieldDescription($fieldDescription);
         }
-
-        $fieldDescription->setAdmin($admin);
 
         if (($fieldMapping = $fieldDescription->getFieldMapping()) !== []) {
             if (($fieldMapping['id'] ?? false) !== true) {
@@ -117,7 +113,11 @@ class ListBuilder implements ListBuilderInterface
 
         if (!$fieldDescription->getType()) {
             throw new RuntimeException(
-                sprintf('Please define a type for field `%s` in `%s`', $fieldDescription->getName(), get_class($admin))
+                sprintf(
+                    'Please define a type for field `%s` in `%s`',
+                    $fieldDescription->getName(),
+                    get_class($fieldDescription->getAdmin())
+                )
             );
         }
 
@@ -126,19 +126,18 @@ class ListBuilder implements ListBuilderInterface
         }
     }
 
-    /**
-     * Build action field description.
-     *
-     * @param FieldDescriptionInterface $fieldDescription
-     */
     private function buildActionFieldDescription(FieldDescriptionInterface $fieldDescription): void
     {
         if ($fieldDescription->getTemplate() === null) {
             $fieldDescription->setTemplate('@SonataAdmin/CRUD/list__action.html.twig');
         }
 
-        if (in_array($fieldDescription->getType(), [null, '_action'], true)) {
+        if ($fieldDescription->getType() === null) {
             $fieldDescription->setType('actions');
+        }
+
+        if ($fieldDescription->getOption('name') === null) {
+            $fieldDescription->setOption('name', 'Action');
         }
 
         if ($fieldDescription->getOption('actions') !== null) {
@@ -154,13 +153,6 @@ class ListBuilder implements ListBuilderInterface
         }
     }
 
-    /**
-     * Returns template for the given type.
-     *
-     * @param string $type
-     *
-     * @return string|null
-     */
     private function getTemplate(string $type): ?string
     {
         return $this->templates[$type] ?? null;
