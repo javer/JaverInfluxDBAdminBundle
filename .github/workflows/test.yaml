@@ -18,15 +18,15 @@ jobs:
                 include:
                     - php-version: '7.4'
                       symfony-version: '4.4.*'
-                      sonata-version: '4.0.0-rc.1'
+                      sonata-version: '4.0.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '4.4.*'
-                      sonata-version: '4.0.0-rc.1'
+                      sonata-version: '4.0.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '5.3.*'
-                      sonata-version: '4.0.0-rc.1'
+                      sonata-version: '4.0.0'
                       experimental: false
 
         steps:
