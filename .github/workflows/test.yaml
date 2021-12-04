@@ -16,10 +16,6 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - php-version: '7.4'
-                      symfony-version: '4.4.*'
-                      sonata-version: '4.0.0'
-                      experimental: false
                     - php-version: '8.0'
                       symfony-version: '4.4.*'
                       sonata-version: '4.0.0'
@@ -27,6 +23,18 @@ jobs:
                     - php-version: '8.0'
                       symfony-version: '5.3.*'
                       sonata-version: '4.0.0'
+                      experimental: false
+                    - php-version: '8.0'
+                      symfony-version: '6.0.*'
+                      sonata-version: '4.5.0'
+                      experimental: false
+                    - php-version: '8.1'
+                      symfony-version: '5.4.*'
+                      sonata-version: '4.5.0'
+                      experimental: false
+                    - php-version: '8.1'
+                      symfony-version: '6.0.*'
+                      sonata-version: '4.5.0'
                       experimental: false
 
         steps:
@@ -39,13 +47,10 @@ jobs:
                   coverage: none
                   ini-values: "memory_limit=-1"
                   php-version: ${{ matrix.php-version }}
-                  tools: composer:v2, cs2pr
+                  tools: composer:v2, cs2pr, flex
 
             - name: Validate composer.json
               run: composer validate --no-check-lock
-
-            - name: Configure Symfony version
-              run: composer require --no-update symfony/symfony "${{ matrix.symfony-version }}"
 
             - name: Configure SonataAdminBundle version
               run: composer require --no-update sonata-project/admin-bundle "${{ matrix.sonata-version }}"
@@ -54,6 +59,8 @@ jobs:
               uses: "ramsey/composer-install@v1"
               with:
                   composer-options: "--prefer-dist"
+              env:
+                  SYMFONY_REQUIRE: "${{ matrix.symfony-version }}"
 
             - name: Setup problem matchers for PHP
               run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
