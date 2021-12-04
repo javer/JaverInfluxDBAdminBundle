@@ -14,6 +14,7 @@ jobs:
         continue-on-error: ${{ matrix.experimental }}
 
         strategy:
+            fail-fast: false
             matrix:
                 include:
                     - php-version: '8.0'
@@ -47,10 +48,13 @@ jobs:
                   coverage: none
                   ini-values: "memory_limit=-1"
                   php-version: ${{ matrix.php-version }}
-                  tools: composer:v2, cs2pr, flex
+                  tools: composer:v2, cs2pr
 
             - name: Validate composer.json
               run: composer validate --no-check-lock
+
+            - name: Configure Symfony version
+              run: composer require --no-update symfony/symfony "${{ matrix.symfony-version }}"
 
             - name: Configure SonataAdminBundle version
               run: composer require --no-update sonata-project/admin-bundle "${{ matrix.sonata-version }}"
@@ -59,8 +63,6 @@ jobs:
               uses: "ramsey/composer-install@v1"
               with:
                   composer-options: "--prefer-dist"
-              env:
-                  SYMFONY_REQUIRE: "${{ matrix.symfony-version }}"
 
             - name: Setup problem matchers for PHP
               run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
