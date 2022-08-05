@@ -42,9 +42,14 @@ abstract class Filter extends BaseFilter
 
     protected function quoteFieldName(string $field): string
     {
-        $isId = $this->getFieldMapping()['id'] ?? false;
+        $fieldMapping = $this->getFieldMapping();
+        $isId = $fieldMapping['id'] ?? false;
 
-        return $isId ? $field : sprintf('"%s"', $field);
+        if ($isId || $fieldMapping['fieldName'] !== $field) {
+            return $field;
+        }
+
+        return sprintf('"%s"', $fieldMapping['name']);
     }
 
     /**
