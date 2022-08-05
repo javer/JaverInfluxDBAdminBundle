@@ -2,12 +2,12 @@
 
 namespace Javer\InfluxDB\AdminBundle\Exporter;
 
+use Iterator;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQuery;
 use Javer\InfluxDB\AdminBundle\Exporter\Source\DoctrineODMQuerySourceIterator;
 use LogicException;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Exporter\DataSourceInterface;
-use Sonata\Exporter\Source\SourceIteratorInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -16,7 +16,7 @@ class DataSource implements DataSourceInterface
      *
      * @throws LogicException
      */
-    public function createIterator(ProxyQueryInterface $query, array $fields): SourceIteratorInterface
+    public function createIterator(ProxyQueryInterface $query, array $fields): Iterator
     {
         if (!$query instanceof ProxyQuery) {
             throw new LogicException(sprintf('Argument 1 MUST be an instance of "%s"', ProxyQuery::class));
