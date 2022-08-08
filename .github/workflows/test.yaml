@@ -19,23 +19,23 @@ jobs:
                 include:
                     - php-version: '8.0'
                       symfony-version: '4.4.*'
-                      sonata-version: '4.0.0'
+                      sonata-version: '4.9.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '5.4.*'
-                      sonata-version: '4.0.0'
+                      sonata-version: '4.9.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '6.0.*'
-                      sonata-version: '4.5.0'
+                      sonata-version: '4.9.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '5.4.*'
-                      sonata-version: '4.5.0'
+                      sonata-version: '4.9.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '6.0.*'
-                      sonata-version: '4.5.0'
+                      sonata-version: '4.9.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '6.1.*'
@@ -56,10 +56,6 @@ jobs:
 
             - name: Validate composer.json
               run: composer validate --no-check-lock
-
-            - name: Configure Symfony ACL version
-              run: composer require --no-update symfony/security-acl "3.x-dev as 3.3.0"
-              if: matrix.symfony-version == '6.0.*'
 
             - name: Configure SonataAdminBundle version
               run: composer require --no-update sonata-project/admin-bundle "${{ matrix.sonata-version }}"

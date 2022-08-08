@@ -16,7 +16,7 @@
         "php": ">=8.0",
         "javer/influxdb-odm": "^1.0.4",
         "javer/influxdb-odm-bundle": "^1.0",
-        "sonata-project/admin-bundle": "^4.0",
+        "sonata-project/admin-bundle": "^4.9",
         "sonata-project/form-extensions": "^1.0",
         "symfony/config": "^4.4 || ^5.4 || ^6.0",
         "symfony/dependency-injection": "^4.4 || ^5.4 || ^6.0",
@@ -39,7 +39,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.1.x-dev"
+            "dev-master": "2.x-dev"
         }
     }
 }
