@@ -6,10 +6,6 @@ use DateInterval;
 use DateTime;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Model\FilterData;
-use Sonata\AdminBundle\Form\Type\Filter\DateRangeType;
-use Sonata\AdminBundle\Form\Type\Filter\DateTimeRangeType;
-use Sonata\AdminBundle\Form\Type\Filter\DateTimeType;
-use Sonata\AdminBundle\Form\Type\Filter\DateType;
 use Sonata\AdminBundle\Form\Type\Operator\DateOperatorType;
 use Sonata\AdminBundle\Form\Type\Operator\DateRangeOperatorType;
 
@@ -52,25 +48,13 @@ abstract class AbstractDateFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function getRenderSettings(): array
+    public function getFormOptions(): array
     {
-        $name = DateType::class;
-
-        if ($this->time && $this->range) {
-            $name = DateTimeRangeType::class;
-        } elseif ($this->time) {
-            $name = DateTimeType::class;
-        } elseif ($this->range) {
-            $name = DateRangeType::class;
-        }
-
         return [
-            $name,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'label' => $this->getLabel(),
-            ],
+            'field_type' => $this->getFieldType(),
+            'field_options' => $this->getFieldOptions(),
+            'label' => $this->getLabel(),
+            'operator_type' => $this->range ? DateRangeOperatorType::class : DateOperatorType::class,
         ];
     }
 

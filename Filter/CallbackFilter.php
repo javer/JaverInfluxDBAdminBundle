@@ -5,7 +5,6 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use RuntimeException;
 use Sonata\AdminBundle\Filter\Model\FilterData;
-use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use UnexpectedValueException;
@@ -28,17 +27,14 @@ class CallbackFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function getRenderSettings(): array
+    public function getFormOptions(): array
     {
         return [
-            DefaultType::class,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'operator_type' => $this->getOption('operator_type'),
-                'operator_options' => $this->getOption('operator_options'),
-                'label' => $this->getLabel(),
-            ],
+            'field_type' => $this->getFieldType(),
+            'field_options' => $this->getFieldOptions(),
+            'operator_type' => $this->getOption('operator_type'),
+            'operator_options' => $this->getOption('operator_options'),
+            'label' => $this->getLabel(),
         ];
     }
 

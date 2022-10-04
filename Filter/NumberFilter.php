@@ -4,7 +4,6 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Model\FilterData;
-use Sonata\AdminBundle\Form\Type\Filter\NumberType;
 use Sonata\AdminBundle\Form\Type\Operator\NumberOperatorType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType as FormNumberType;
 
@@ -34,15 +33,13 @@ class NumberFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function getRenderSettings(): array
+    public function getFormOptions(): array
     {
         return [
-            NumberType::class,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'label' => $this->getLabel(),
-            ],
+            'field_type' => $this->getFieldType(),
+            'field_options' => $this->getFieldOptions(),
+            'label' => $this->getLabel(),
+            'operator_type' => NumberOperatorType::class,
         ];
     }
 

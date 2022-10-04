@@ -19,27 +19,27 @@ jobs:
                 include:
                     - php-version: '8.0'
                       symfony-version: '4.4.*'
-                      sonata-version: '4.9.0'
+                      sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '5.4.*'
-                      sonata-version: '4.9.0'
+                      sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.0'
                       symfony-version: '6.0.*'
-                      sonata-version: '4.9.0'
+                      sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '5.4.*'
-                      sonata-version: '4.9.0'
+                      sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '6.0.*'
-                      sonata-version: '4.9.0'
+                      sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.1'
                       symfony-version: '6.1.*'
-                      sonata-version: '4.13.0'
+                      sonata-version: '4.19.0'
                       experimental: false
 
         steps:

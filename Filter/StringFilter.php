@@ -32,17 +32,14 @@ class StringFilter extends Filter
     /**
      * {@inheritDoc}
      */
-    public function getRenderSettings(): array
+    public function getFormOptions(): array
     {
         return [
-            ChoiceType::class,
-            [
-                'field_type' => $this->getFieldType(),
-                'field_options' => $this->getFieldOptions(),
-                'label' => $this->getLabel(),
-                'operator_type' => $this->getOption('operator_type'),
-                'operator_options' => $this->getOption('operator_options'),
-            ],
+            'field_type' => $this->getFieldType(),
+            'field_options' => $this->getFieldOptions(),
+            'label' => $this->getLabel(),
+            'operator_type' => $this->getOption('operator_type'),
+            'operator_options' => $this->getOption('operator_options'),
         ];
     }
 
