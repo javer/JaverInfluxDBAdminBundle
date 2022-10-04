@@ -154,9 +154,15 @@ use Sonata\AdminBundle\Admin\AbstractAdmin;
 
 class CpuLoadAdmin extends AbstractAdmin
 {
-    protected $baseRouteName = 'cpu_load';
+    protected function generateBaseRouteName(bool $isChildAdmin = false): string
+    {
+        return 'cpu_load';
+    }
 
-    protected $baseRoutePattern = 'cpu_load';
+    protected function generateBaseRoutePattern(bool $isChildAdmin = false): string
+    {
+        return 'cpu_load';
+    }
 
     protected function configureListFields(ListMapper $list): void
     {
@@ -180,8 +186,8 @@ class CpuLoadAdmin extends AbstractAdmin
 }
 ```
 
-Please note that you must explicitly declare `baseRouteName` and `baseRoutePattern`
-because they cannot detected automatically from the measurement class name.
+Please note that you must explicitly implement `generateBaseRouteName()` and `generateBaseRoutePattern()`
+because they results cannot detected automatically from the measurement class name.
 
 List field definition
 =====================

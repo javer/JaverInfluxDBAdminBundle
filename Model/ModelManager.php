@@ -2,19 +2,22 @@
 
 namespace Javer\InfluxDB\AdminBundle\Model;
 
+use Doctrine\Common\Util\ClassUtils;
 use InvalidArgumentException;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQuery;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Javer\InfluxDB\ODM\Mapping\ClassMetadata;
+use Javer\InfluxDB\ODM\Mapping\MappingException;
 use Javer\InfluxDB\ODM\MeasurementManager;
 use Javer\InfluxDB\ODM\Query\Query;
 use Javer\InfluxDB\ODM\Types\Type;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
+use Sonata\AdminBundle\Model\ProxyResolverInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use TypeError;
 
-final class ModelManager implements ModelManagerInterface
+final class ModelManager implements ModelManagerInterface, ProxyResolverInterface
 {
     public const ID_SEPARATOR = '-';
 
@@ -26,6 +29,17 @@ final class ModelManager implements ModelManagerInterface
     {
         $this->measurementManager = $measurementManager;
         $this->propertyAccessor = $propertyAccessor;
+    }
+
+    public function getRealClass(object $object): string
+    {
+        $class = get_class($object);
+
+        try {
+            return $this->getMetadata($class)->getName();
+        } catch (MappingException) {
+            return $class;
+        }
     }
 
     public function create(object $object): void
