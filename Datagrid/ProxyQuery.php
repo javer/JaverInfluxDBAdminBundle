@@ -5,10 +5,8 @@ namespace Javer\InfluxDB\AdminBundle\Datagrid;
 use Javer\InfluxDB\ODM\Query\Query;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 
-class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
+final class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
 {
-    private Query $query;
-
     private ?string $sortBy = null;
 
     private ?string $sortOrder = null;
@@ -17,9 +15,10 @@ class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
 
     private ?int $maxResults = null;
 
-    public function __construct(Query $query)
+    public function __construct(
+        private Query $query,
+    )
     {
-        $this->query = $query;
     }
 
     /**
@@ -66,13 +65,7 @@ class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
      */
     public function setSortBy(array $parentAssociationMappings, array $fieldMapping): self
     {
-        $parents = '';
-
-        foreach ($parentAssociationMappings as $mapping) {
-            $parents .= $mapping['fieldName'] . '.';
-        }
-
-        $this->sortBy = $parents . $fieldMapping['fieldName'];
+        $this->sortBy = $fieldMapping['fieldName'];
 
         return $this;
     }
@@ -92,14 +85,6 @@ class ProxyQuery implements BaseProxyQueryInterface, ProxyQueryInterface
     public function getSortOrder(): ?string
     {
         return $this->sortOrder;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSingleScalarResult()
-    {
-        return $this->query->getSingleScalarResult();
     }
 
     public function setFirstResult(?int $firstResult): self

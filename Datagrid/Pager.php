@@ -2,10 +2,9 @@
 
 namespace Javer\InfluxDB\AdminBundle\Datagrid;
 
-use Javer\InfluxDB\ODM\Query\Query;
 use Sonata\AdminBundle\Datagrid\Pager as BasePager;
 
-class Pager extends BasePager
+final class Pager extends BasePager
 {
     private int $resultsCount = 0;
 
@@ -19,10 +18,9 @@ class Pager extends BasePager
      */
     public function getCurrentPageResults(): array
     {
-        /** @var ProxyQuery $query */
         $query = $this->getQuery();
 
-        if ($query->getMaxResults() === 0) {
+        if (!$query?->getMaxResults()) {
             return [];
         }
 
@@ -33,8 +31,11 @@ class Pager extends BasePager
     {
         $this->resultsCount = $this->computeResultsCount();
 
-        /** @var ProxyQuery $query */
         $query = $this->getQuery();
+
+        if ($query === null) {
+            return;
+        }
 
         $query->setFirstResult(0);
         $query->setMaxResults(0);
@@ -53,9 +54,10 @@ class Pager extends BasePager
 
     private function computeResultsCount(): int
     {
-        /** @var Query $countQuery */
-        $countQuery = clone $this->getQuery();
+        $query = clone $this->getQuery();
 
-        return $countQuery->executeCount();
+        assert($query instanceof ProxyQueryInterface);
+
+        return $query->getQuery()->count()->getSingleScalarResult();
     }
 }

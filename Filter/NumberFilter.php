@@ -10,7 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType as FormNumberType;
 class NumberFilter extends Filter
 {
     private const CHOICES = [
-        NumberOperatorType::TYPE_EQUAL => '=',
+        NumberOperatorType::TYPE_EQUAL => '==',
         NumberOperatorType::TYPE_GREATER_EQUAL => '>=',
         NumberOperatorType::TYPE_GREATER_THAN => '>',
         NumberOperatorType::TYPE_LESS_EQUAL => '<=',
@@ -49,12 +49,12 @@ class NumberFilter extends Filter
             return;
         }
 
-        $field = $this->quoteFieldName($field);
+        $field = $query->getQuery()->getClassMetadata()->getFieldDatabaseName($field);
         $type = $data->getType() ?? $this->getOption('operator_default_type');
         $operator = $this->getOperator((int) $type);
         $value = $this->quoteFieldValue($data->getValue());
 
-        $this->applyWhere($query, sprintf("%s %s %s", $field, $operator, $value));
+        $this->applyWhere($query, sprintf('r.%s %s %s', $field, $operator, $value));
     }
 
     private function getOperator(int $type): string

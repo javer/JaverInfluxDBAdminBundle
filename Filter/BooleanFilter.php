@@ -4,7 +4,6 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Model\FilterData;
-use Sonata\AdminBundle\Form\Type\Filter\DefaultType;
 use Sonata\Form\Type\BooleanType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 
@@ -48,9 +47,6 @@ class BooleanFilter extends Filter
             return;
         }
 
-        $field = $this->quoteFieldName($field);
-        $value = $this->quoteFieldValue($value === BooleanType::TYPE_YES ? 1 : 0);
-
-        $this->applyWhere($query, sprintf('%s = %s', $field, $value));
+        $this->applyWhere($query, $field, $value === BooleanType::TYPE_YES);
     }
 }

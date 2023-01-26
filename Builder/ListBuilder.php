@@ -2,6 +2,7 @@
 
 namespace Javer\InfluxDB\AdminBundle\Builder;
 
+use Javer\InfluxDB\ODM\Types\TypeEnum;
 use RuntimeException;
 use Sonata\AdminBundle\Builder\ListBuilderInterface;
 use Sonata\AdminBundle\Datagrid\ListMapper;
@@ -11,31 +12,21 @@ use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 
 final class ListBuilder implements ListBuilderInterface
 {
-    private TypeGuesserInterface $guesser;
-
     /**
-     * @var string[]
-     */
-    private array $templates;
-
-    /**
-     * ListBuilder constructor.
+     * Constructor.
      *
      * @param TypeGuesserInterface $guesser
      * @param string[]             $templates
      */
-    public function __construct(TypeGuesserInterface $guesser, array $templates)
+    public function __construct(
+        private readonly TypeGuesserInterface $guesser,
+        private readonly array $templates,
+    )
     {
-        $this->guesser = $guesser;
-        $this->templates = $templates;
     }
 
     /**
-     * Returns base list.
-     *
-     * @param array $options
-     *
-     * @return FieldDescriptionCollection
+     * {@inheritDoc}
      */
     public function getBaseList(array $options = []): FieldDescriptionCollection
     {
@@ -88,7 +79,7 @@ final class ListBuilder implements ListBuilderInterface
         }
 
         if (($fieldMapping = $fieldDescription->getFieldMapping()) !== []) {
-            if (($fieldMapping['id'] ?? false) !== true) {
+            if (($fieldMapping['type'] ?? null) !== TypeEnum::TIMESTAMP) {
                 // Only ORDER BY time supported at this time
                 $fieldDescription->setOption('sortable', false);
             }
