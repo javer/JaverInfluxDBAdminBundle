@@ -7,7 +7,7 @@ use Javer\InfluxDB\AdminBundle\Filter\DateTimeFilter;
 use Javer\InfluxDB\AdminBundle\Filter\NumberFilter;
 use Javer\InfluxDB\AdminBundle\Filter\StringFilter;
 use Javer\InfluxDB\AdminBundle\Model\MissingPropertyMetadataException;
-use Javer\InfluxDB\ODM\Types\Type;
+use Javer\InfluxDB\ODM\Types\TypeEnum;
 use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
 use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 use Sonata\Form\Type\BooleanType;
@@ -41,19 +41,19 @@ final class FilterTypeGuesser implements TypeGuesserInterface
             );
         }
 
-        switch ($fieldDescription->getMappingType()) {
-            case Type::TIMESTAMP:
+        switch (TypeEnum::tryFrom($fieldDescription->getMappingType())) {
+            case TypeEnum::TIMESTAMP:
                 $options['field_type'] = DateTimeType::class;
                 return new TypeGuess(DateTimeFilter::class, $options, Guess::HIGH_CONFIDENCE);
-            case Type::BOOLEAN:
+            case TypeEnum::BOOLEAN:
                 $options['field_type'] = BooleanType::class;
                 $options['field_options'] = [];
                 return new TypeGuess(BooleanFilter::class, $options, Guess::HIGH_CONFIDENCE);
-            case Type::INTEGER:
-            case Type::FLOAT:
+            case TypeEnum::INTEGER:
+            case TypeEnum::FLOAT:
                 $options['field_type'] = NumberType::class;
                 return new TypeGuess(NumberFilter::class, $options, Guess::HIGH_CONFIDENCE);
-            case Type::STRING:
+            case TypeEnum::STRING:
                 $options['field_type'] = TextType::class;
                 return new TypeGuess(StringFilter::class, $options, Guess::MEDIUM_CONFIDENCE);
             default:

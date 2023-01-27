@@ -5,7 +5,7 @@ namespace Javer\InfluxDB\AdminBundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-class AddTemplatesCompilerPass implements CompilerPassInterface
+final class AddTemplatesCompilerPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {

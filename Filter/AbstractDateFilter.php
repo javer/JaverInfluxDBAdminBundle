@@ -2,7 +2,6 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
-use DateInterval;
 use DateTime;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Model\FilterData;
@@ -11,27 +10,15 @@ use Sonata\AdminBundle\Form\Type\Operator\DateRangeOperatorType;
 
 abstract class AbstractDateFilter extends Filter
 {
-    protected const CHOICES = [
-        DateOperatorType::TYPE_EQUAL => '=',
-        DateOperatorType::TYPE_GREATER_EQUAL => '>=',
-        DateOperatorType::TYPE_GREATER_THAN => '>',
-        DateOperatorType::TYPE_LESS_EQUAL => '<=',
-        DateOperatorType::TYPE_LESS_THAN => '<',
-    ];
-
-    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+    private const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
     /**
      * Flag indicating that filter will have range.
-     *
-     * @var boolean
      */
     protected bool $range = false;
 
     /**
      * Flag indicating that filter will filter by datetime instead by date.
-     *
-     * @var boolean
      */
     protected bool $time = false;
 
@@ -64,7 +51,6 @@ abstract class AbstractDateFilter extends Filter
             return;
         }
 
-        $field = $this->quoteFieldName($field);
         $value = $data->getValue();
 
         if ($this->range) {
@@ -84,82 +70,74 @@ abstract class AbstractDateFilter extends Filter
             // date filter should filter records for the whole days
             if ($this->time === false) {
                 if ($value['start'] instanceof DateTime) {
-                    $value['start']->setTime(0, 0, 0);
+                    $value['start']->setTime(0, 0);
                 }
                 if ($value['end'] instanceof DateTime) {
                     $value['end']->setTime(23, 59, 59);
                 }
             }
 
-            // transform types
-            if ($this->getOption('input_type') === 'timestamp') {
-                $value['start'] = $value['start'] instanceof DateTime
-                    ? $value['start']->getTimestamp()
-                    : 0;
-                $value['end'] = $value['end'] instanceof DateTime
-                    ? $value['end']->getTimestamp()
-                    : 0;
-            }
-
-            $fromDate = date(self::DATETIME_FORMAT, (int) $value['start']);
-            $toDate = date(self::DATETIME_FORMAT, (int) $value['end']);
+            $value['start'] = $value['start'] instanceof DateTime
+                ? $value['start']
+                : new DateTime(sprintf('@%d', (int) ($value['start'] ?? 0)));
+            $value['end'] = $value['end'] instanceof DateTime
+                ? $value['end']
+                : new DateTime(sprintf('@%d', (int) ($value['end'] ?? time())));
 
             // default type for range filter
             $type = $data->getType() ?? DateRangeOperatorType::TYPE_BETWEEN;
 
             if ($type === DateRangeOperatorType::TYPE_NOT_BETWEEN) {
-                $this->applyWhere($query, sprintf("%s < '%s' OR %s > '%s'", $field, $fromDate, $field, $toDate));
+                $field = $query->getQuery()->getClassMetadata()->getFieldDatabaseName($field);
+                $query->getQuery()->where(sprintf(
+                    '(r.%s < time(v: "%s") or r.%s > time(v: "%s"))',
+                    $field,
+                    $value['start']->format(self::DATETIME_FORMAT),
+                    $field,
+                    $value['end']->format(self::DATETIME_FORMAT),
+                ));
             } else {
-                if ($value['start']) {
-                    $this->applyWhere($query, sprintf("%s >= '%s'", $field, $fromDate));
-                }
-
-                if ($value['end']) {
-                    $this->applyWhere($query, sprintf("%s <= '%s'", $field, $toDate));
-                }
+                $this->applyRange($query, $value['start'], $value['end']);
             }
         } else {
             // default type for simple filter
             $type = $data->getType() ?? DateOperatorType::TYPE_EQUAL;
 
-            // just find an operator and apply query
-            $operator = $this->getOperator($type);
-
             // transform types
-            if ($this->getOption('input_type') === 'timestamp') {
-                $value = $value instanceof DateTime ? $value->getTimestamp() : 0;
-            }
+            $value = $value instanceof DateTime ? $value : new DateTime(sprintf('@%d', (int) $value));
 
-            if (in_array($operator, ['NULL', 'NOT NULL'], true)) {
-                return;
-            }
-
-            $fromDate = date(self::DATETIME_FORMAT, (int) $value);
-
-            // date filter should filter records for the whole day
-            if ($this->time === false && $type === DateOperatorType::TYPE_EQUAL) {
-                $this->applyWhere($query, sprintf("%s %s '%s'", $field, '>=', $fromDate));
-
-                if ($this->getOption('input_type') === 'timestamp') {
-                    $endValue = strtotime('+1 day', $value);
-                } else {
-                    $endValue = clone $value;
-                    $endValue->add(new DateInterval('P1D'));
-                }
-
-                $toDate = date(self::DATETIME_FORMAT, (int) $endValue);
-
-                $this->applyWhere($query, sprintf("%s %s '%s'", $field, '<', $toDate));
-
-                return;
-            }
-
-            $this->applyWhere($query, sprintf("%s %s '%s'", $field, $operator, $fromDate));
+            $this->setRange($type, $value, $query);
         }
     }
 
-    protected function getOperator(int $type): string
+    private function setRange(int $type, DateTime $value, ProxyQueryInterface $query): void
     {
-        return self::CHOICES[$type] ?? self::CHOICES[DateOperatorType::TYPE_EQUAL];
+        $start = new DateTime('@0');
+        $stop = new DateTime();
+
+        switch ($type) {
+            case DateOperatorType::TYPE_GREATER_EQUAL:
+                $start = $value;
+                break;
+            case DateOperatorType::TYPE_GREATER_THAN:
+                $start = $value->modify('+1µsec');
+                break;
+            case DateOperatorType::TYPE_EQUAL:
+                if ($this->time) {
+                    $start = $stop = $value;
+                } else {
+                    $start = $value;
+                    $stop = (clone $value)->modify('+1day');
+                }
+                break;
+            case DateOperatorType::TYPE_LESS_EQUAL:
+                $stop = $value->modify('+1µsec');
+                break;
+            case DateOperatorType::TYPE_LESS_THAN:
+                $stop = $value;
+                break;
+        }
+
+        $this->applyRange($query, $start, $stop);
     }
 }

@@ -4,19 +4,10 @@ namespace Javer\InfluxDB\AdminBundle\Filter;
 
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Model\FilterData;
-use Sonata\AdminBundle\Form\Type\Filter\ChoiceType;
 use Sonata\AdminBundle\Form\Type\Operator\StringOperatorType;
 
 class StringFilter extends Filter
 {
-    private const CHOICES = [
-        StringOperatorType::TYPE_CONTAINS => '=~',
-        StringOperatorType::TYPE_STARTS_WITH => '=~',
-        StringOperatorType::TYPE_ENDS_WITH => '=~',
-        StringOperatorType::TYPE_NOT_CONTAINS => '!~',
-        StringOperatorType::TYPE_EQUAL => '=',
-    ];
-
     /**
      * {@inheritDoc}
      */
@@ -55,26 +46,27 @@ class StringFilter extends Filter
             return;
         }
 
-        $field = $this->quoteFieldName($field);
+        $field = $query->getQuery()->getClassMetadata()->getFieldDatabaseName($field);
         $type = $data->getType() ?? $this->getOption('operator_default_type');
-        $operator = $this->getOperator((int) $type);
-        $format = "'%s'";
 
-        if (in_array($type, [StringOperatorType::TYPE_CONTAINS, StringOperatorType::TYPE_NOT_CONTAINS], true)) {
-            $format = '/%s/';
-        } elseif ($type === StringOperatorType::TYPE_STARTS_WITH) {
-            $format = '/^%s/';
-        } elseif ($type === StringOperatorType::TYPE_ENDS_WITH) {
-            $format = '/%s$/';
+        $condition = match ((int) $type) {
+            StringOperatorType::TYPE_CONTAINS => sprintf('strings.containsStr(v: r.%s, substr: "%s")', $field, $value),
+            StringOperatorType::TYPE_NOT_CONTAINS => sprintf(
+                'not strings.containsStr(v: r.%s, substr: "%s")',
+                $field,
+                $value,
+            ),
+            StringOperatorType::TYPE_STARTS_WITH => sprintf('strings.hasPrefix(v: r.%s, prefix: "%s")', $field, $value),
+            StringOperatorType::TYPE_ENDS_WITH => sprintf('strings.hasSuffix(v: r.%s, suffix: "%s")', $field, $value),
+            StringOperatorType::TYPE_NOT_EQUAL => sprintf('r.%s != "%s"', $field, $value),
+            default => sprintf('r.%s == "%s"', $field, $value),
+        };
+
+        $this->applyWhere($query, $condition);
+
+        if (str_contains($condition, 'strings.')) {
+            $query->getQuery()->addImport('strings');
+            $query->getQuery()->fill($field, '""');
         }
-
-        $value = $type === StringOperatorType::TYPE_EQUAL ? $value : preg_quote($value, '/');
-
-        $this->applyWhere($query, sprintf('%s %s ' . $format, $field, $operator, $value));
-    }
-
-    private function getOperator(int $type): string
-    {
-        return self::CHOICES[$type] ?? self::CHOICES[StringOperatorType::TYPE_EQUAL];
     }
 }

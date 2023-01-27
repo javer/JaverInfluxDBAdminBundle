@@ -12,17 +12,22 @@
             "homepage": "https://github.com/javer"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:yariknechyporuk/influxdb-odm.git"
+        }
+    ],
     "require": {
-        "php": ">=8.0",
-        "javer/influxdb-odm": "^1.0.4",
-        "javer/influxdb-odm-bundle": "^1.0",
+        "php": ">=8.1",
         "sonata-project/admin-bundle": "^4.17",
         "sonata-project/form-extensions": "^1.15",
         "symfony/config": "^4.4 || ^5.4 || ^6.0",
         "symfony/dependency-injection": "^4.4 || ^5.4 || ^6.0",
         "symfony/form": "^4.4 || ^5.4 || ^6.0",
         "symfony/http-kernel": "^4.4 || ^5.4 || ^6.0",
-        "symfony/yaml": "^4.4 || ^5.4 || ^6.0"
+        "symfony/yaml": "^4.4 || ^5.4 || ^6.0",
+        "javer/influxdb-odm": "v2.x-dev"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.0",

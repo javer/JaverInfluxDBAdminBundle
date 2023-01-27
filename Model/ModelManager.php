@@ -2,7 +2,7 @@
 
 namespace Javer\InfluxDB\AdminBundle\Model;
 
-use Doctrine\Common\Util\ClassUtils;
+use DateTimeInterface;
 use InvalidArgumentException;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQuery;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
@@ -10,7 +10,6 @@ use Javer\InfluxDB\ODM\Mapping\ClassMetadata;
 use Javer\InfluxDB\ODM\Mapping\MappingException;
 use Javer\InfluxDB\ODM\MeasurementManager;
 use Javer\InfluxDB\ODM\Query\Query;
-use Javer\InfluxDB\ODM\Types\Type;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
 use Sonata\AdminBundle\Model\ProxyResolverInterface;
@@ -19,16 +18,13 @@ use TypeError;
 
 final class ModelManager implements ModelManagerInterface, ProxyResolverInterface
 {
-    public const ID_SEPARATOR = '-';
+    private const DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
 
-    private MeasurementManager $measurementManager;
-
-    private PropertyAccessorInterface $propertyAccessor;
-
-    public function __construct(MeasurementManager $measurementManager, PropertyAccessorInterface $propertyAccessor)
+    public function __construct(
+        private readonly MeasurementManager $measurementManager,
+        private readonly PropertyAccessorInterface $propertyAccessor,
+    )
     {
-        $this->measurementManager = $measurementManager;
-        $this->propertyAccessor = $propertyAccessor;
     }
 
     public function getRealClass(object $object): string
@@ -107,24 +103,11 @@ final class ModelManager implements ModelManagerInterface, ProxyResolverInterfac
      */
     public function getIdentifierValues(object $model): array
     {
-        $class = get_class($model);
-        $metadata = $this->getMetadata($class);
-
-        $identifiers = [];
-
-        foreach ($metadata->getIdentifierValues($model) as $name => $value) {
-            if (!is_object($value)) {
-                $identifiers[] = $value;
-
-                continue;
-            }
-
-            $fieldType = $metadata->getTypeOfField($name);
-
-            $identifiers[] = Type::getType($fieldType)->convertToDatabaseValue($value);
-        }
-
-        return $identifiers;
+        return array_map(
+            static fn(mixed $value): string
+                => (string) ($value instanceof DateTimeInterface ? $value->format(self::DATE_FORMAT) : $value),
+            array_values($this->getMetadata(get_class($model))->getIdentifierValues($model)),
+        );
     }
 
     /**
@@ -137,9 +120,11 @@ final class ModelManager implements ModelManagerInterface, ProxyResolverInterfac
 
     public function getNormalizedIdentifier(object $model): ?string
     {
-        $values = $this->getIdentifierValues($model);
+        if ($identifier = $this->getIdentifierValues($model)[0]) {
+            return (string) $identifier;
+        }
 
-        return implode(self::ID_SEPARATOR, $values);
+        return null;
     }
 
     public function getUrlSafeIdentifier(object $model): ?string
@@ -166,7 +151,7 @@ final class ModelManager implements ModelManagerInterface, ProxyResolverInterfac
      *
      * @throws InvalidArgumentException
      */
-    public function executeQuery(object $query)
+    public function executeQuery(object $query): array
     {
         if (!$query instanceof ProxyQuery) {
             throw new InvalidArgumentException('Query must be ' . ProxyQuery::class);
@@ -224,10 +209,6 @@ final class ModelManager implements ModelManagerInterface, ProxyResolverInterfac
 
     /**
      * Returns metadata for the class.
-     *
-     * @param string $class
-     *
-     * @return ClassMetadata
      *
      * @phpstan-template T of object
      * @phpstan-param    class-string<T> $class

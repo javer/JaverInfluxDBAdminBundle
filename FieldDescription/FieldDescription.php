@@ -2,7 +2,7 @@
 
 namespace Javer\InfluxDB\AdminBundle\FieldDescription;
 
-use RuntimeException;
+use Javer\InfluxDB\ODM\Types\TypeEnum;
 use Sonata\AdminBundle\FieldDescription\BaseFieldDescription;
 
 final class FieldDescription extends BaseFieldDescription
@@ -14,18 +14,11 @@ final class FieldDescription extends BaseFieldDescription
 
     public function isIdentifier(): bool
     {
-        return $this->fieldMapping['id'] ?? false;
+        return ($this->fieldMapping['type'] ?? null) === TypeEnum::TIMESTAMP;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getValue(object $object)
+    public function getValue(object $object): mixed
     {
-        foreach ($this->parentAssociationMappings as $parentAssociationMapping) {
-            $object = $this->getFieldValue($object, $parentAssociationMapping['fieldName']);
-        }
-
         return $this->getFieldValue($object, $this->fieldName);
     }
 
@@ -44,10 +37,6 @@ final class FieldDescription extends BaseFieldDescription
      */
     protected function setAssociationMapping(array $associationMapping): void
     {
-        $this->associationMapping = $associationMapping;
-
-        $this->mappingType = $this->mappingType ?: $associationMapping['type'];
-        $this->fieldName = $associationMapping['fieldName'];
     }
 
     /**
@@ -57,23 +46,21 @@ final class FieldDescription extends BaseFieldDescription
     {
         $this->fieldMapping = $fieldMapping;
 
-        $this->mappingType = $this->mappingType ?: $fieldMapping['type'];
+        if (!$this->mappingType) {
+            $mappingType = $fieldMapping['type'] ?? null;
+
+            if ($mappingType instanceof TypeEnum) {
+                $this->mappingType = $mappingType->value;
+            }
+        }
+
         $this->fieldName = $this->fieldName ?: $fieldMapping['fieldName'];
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @throws RuntimeException
      */
     protected function setParentAssociationMappings(array $parentAssociationMappings): void
     {
-        foreach ($parentAssociationMappings as $parentAssociationMapping) {
-            if (!is_array($parentAssociationMapping)) {
-                throw new RuntimeException('An association mapping must be an array');
-            }
-        }
-
-        $this->parentAssociationMappings = $parentAssociationMappings;
     }
 }

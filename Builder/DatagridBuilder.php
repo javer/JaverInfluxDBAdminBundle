@@ -3,6 +3,7 @@
 namespace Javer\InfluxDB\AdminBundle\Builder;
 
 use Javer\InfluxDB\AdminBundle\Datagrid\Pager as InfluxDBPager;
+use Javer\InfluxDB\ODM\Types\TypeEnum;
 use RuntimeException;
 use Sonata\AdminBundle\Admin\AdminInterface;
 use Sonata\AdminBundle\Builder\DatagridBuilderInterface;
@@ -18,25 +19,13 @@ use Symfony\Component\Form\FormFactoryInterface;
 
 final class DatagridBuilder implements DatagridBuilderInterface
 {
-    private FilterFactoryInterface $filterFactory;
-
-    private FormFactoryInterface $formFactory;
-
-    private TypeGuesserInterface $guesser;
-
-    private bool $csrfTokenEnabled;
-
     public function __construct(
-        FormFactoryInterface $formFactory,
-        FilterFactoryInterface $filterFactory,
-        TypeGuesserInterface $guesser,
-        bool $csrfTokenEnabled = true
+        private readonly FormFactoryInterface $formFactory,
+        private readonly FilterFactoryInterface $filterFactory,
+        private readonly TypeGuesserInterface $guesser,
+        private readonly bool $csrfTokenEnabled = true,
     )
     {
-        $this->formFactory = $formFactory;
-        $this->filterFactory = $filterFactory;
-        $this->guesser = $guesser;
-        $this->csrfTokenEnabled = $csrfTokenEnabled;
     }
 
     public function fixFieldDescription(FieldDescriptionInterface $fieldDescription): void
@@ -47,7 +36,7 @@ final class DatagridBuilder implements DatagridBuilderInterface
                 $fieldDescription->getOption('field_mapping', $fieldDescription->getFieldMapping())
             );
 
-            if ($fieldDescription->getFieldMapping()['type'] === 'string') {
+            if ($fieldDescription->getFieldMapping()['type'] === TypeEnum::STRING) {
                 $fieldDescription->setOption('global_search', $fieldDescription->getOption('global_search', true));
             }
         }
@@ -135,23 +124,14 @@ final class DatagridBuilder implements DatagridBuilderInterface
     /**
      * Get pager by pagerType.
      *
-     * @param string $pagerType
-     *
-     * @return Pager
-     *
      * @throws RuntimeException
      */
     private function getPager(string $pagerType): Pager
     {
-        switch ($pagerType) {
-            case Pager::TYPE_DEFAULT:
-                return new InfluxDBPager();
-
-            case Pager::TYPE_SIMPLE:
-                return new SimplePager();
-
-            default:
-                throw new RuntimeException(sprintf('Unknown pager type "%s".', $pagerType));
-        }
+        return match ($pagerType) {
+            Pager::TYPE_DEFAULT => new InfluxDBPager(),
+            Pager::TYPE_SIMPLE => new SimplePager(),
+            default => throw new RuntimeException(sprintf('Unknown pager type "%s".', $pagerType)),
+        };
     }
 }

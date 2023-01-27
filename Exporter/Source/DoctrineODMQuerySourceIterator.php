@@ -7,10 +7,10 @@ use Sonata\Exporter\Source\AbstractPropertySourceIterator;
 
 final class DoctrineODMQuerySourceIterator extends AbstractPropertySourceIterator
 {
-    private Query $query;
+    private readonly Query $query;
 
     /**
-     * DoctrineODMQuerySourceIterator constructor.
+     * Constructor.
      *
      * @param Query    $query
      * @param string[] $fields

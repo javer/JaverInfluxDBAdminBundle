@@ -2,6 +2,7 @@
 
 namespace Javer\InfluxDB\AdminBundle\Filter;
 
+use DateTimeInterface;
 use Javer\InfluxDB\AdminBundle\Datagrid\ProxyQueryInterface;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface as BaseProxyQueryInterface;
 use Sonata\AdminBundle\Filter\Filter as BaseFilter;
@@ -33,36 +34,28 @@ abstract class Filter extends BaseFilter
     /* phpcs:ignore */
     abstract protected function filter(ProxyQueryInterface $query, string $field, FilterData $data): void;
 
-    protected function applyWhere(ProxyQueryInterface $proxyQuery, string $condition): void
+    protected function applyWhere(ProxyQueryInterface $proxyQuery, string $condition, mixed $value = null): void
     {
         $proxyQuery->getQuery()->where($condition);
 
         $this->setActive(true);
     }
 
-    protected function quoteFieldName(string $field): string
+    protected function applyRange(
+        ProxyQueryInterface $proxyQuery,
+        DateTimeInterface $start,
+        DateTimeInterface $stop,
+    ): void
     {
-        $fieldMapping = $this->getFieldMapping();
-        $isId = $fieldMapping['id'] ?? false;
+        $proxyQuery->getQuery()->range($start, $stop);
 
-        if ($isId || $fieldMapping['fieldName'] !== $field) {
-            return $field;
-        }
-
-        return sprintf('"%s"', $fieldMapping['name']);
+        $this->setActive(true);
     }
 
-    /**
-     * Quotes field value.
-     *
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    protected function quoteFieldValue($value)
+    protected function quoteFieldValue(mixed $value): mixed
     {
         $isTag = $this->getFieldMapping()['tag'] ?? false;
 
-        return $isTag ? sprintf("'%s'", $value) : $value;
+        return $isTag ? sprintf('"%s"', $value) : $value;
     }
 }

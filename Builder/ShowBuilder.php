@@ -8,33 +8,23 @@ use Sonata\AdminBundle\FieldDescription\FieldDescriptionCollection;
 use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
 use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 
-class ShowBuilder implements ShowBuilderInterface
+final class ShowBuilder implements ShowBuilderInterface
 {
-    private TypeGuesserInterface $guesser;
-
     /**
-     * @var string[]
-     */
-    private array $templates;
-
-    /**
-     * ShowBuilder constructor.
+     * Constructor.
      *
      * @param TypeGuesserInterface $guesser
      * @param string[]             $templates
      */
-    public function __construct(TypeGuesserInterface $guesser, array $templates)
+    public function __construct(
+        private readonly TypeGuesserInterface $guesser,
+        private readonly array $templates,
+    )
     {
-        $this->guesser = $guesser;
-        $this->templates = $templates;
     }
 
     /**
-     * Returns base list.
-     *
-     * @param array $options
-     *
-     * @return FieldDescriptionCollection
+     * {@inheritDoc}
      */
     public function getBaseList(array $options = []): FieldDescriptionCollection
     {
@@ -68,9 +58,7 @@ class ShowBuilder implements ShowBuilderInterface
     }
 
     /**
-     * Fixes field description.
-     *
-     * @param FieldDescriptionInterface $fieldDescription
+     * {@inheritDoc}
      *
      * @throws RuntimeException
      */

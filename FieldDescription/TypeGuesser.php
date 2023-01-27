@@ -2,7 +2,7 @@
 
 namespace Javer\InfluxDB\AdminBundle\FieldDescription;
 
-use Javer\InfluxDB\ODM\Types\Type;
+use Javer\InfluxDB\ODM\Types\TypeEnum;
 use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
 use Sonata\AdminBundle\FieldDescription\TypeGuesserInterface;
 use Symfony\Component\Form\Guess\Guess;
@@ -18,19 +18,13 @@ final class TypeGuesser implements TypeGuesserInterface
             return new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::LOW_CONFIDENCE);
         }
 
-        switch ($fieldDescription->getMappingType()) {
-            case Type::TIMESTAMP:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_DATETIME, [], Guess::HIGH_CONFIDENCE);
-            case Type::BOOLEAN:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_BOOLEAN, [], Guess::HIGH_CONFIDENCE);
-            case Type::INTEGER:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_INTEGER, [], Guess::HIGH_CONFIDENCE);
-            case Type::FLOAT:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_FLOAT, [], Guess::HIGH_CONFIDENCE);
-            case Type::STRING:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::MEDIUM_CONFIDENCE);
-            default:
-                return new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::LOW_CONFIDENCE);
-        }
+        return match (TypeEnum::tryFrom($fieldDescription->getMappingType())) {
+            TypeEnum::TIMESTAMP => new TypeGuess(FieldDescriptionInterface::TYPE_DATETIME, [], Guess::HIGH_CONFIDENCE),
+            TypeEnum::BOOLEAN => new TypeGuess(FieldDescriptionInterface::TYPE_BOOLEAN, [], Guess::HIGH_CONFIDENCE),
+            TypeEnum::INTEGER => new TypeGuess(FieldDescriptionInterface::TYPE_INTEGER, [], Guess::HIGH_CONFIDENCE),
+            TypeEnum::FLOAT => new TypeGuess(FieldDescriptionInterface::TYPE_FLOAT, [], Guess::HIGH_CONFIDENCE),
+            TypeEnum::STRING => new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::MEDIUM_CONFIDENCE),
+            default => new TypeGuess(FieldDescriptionInterface::TYPE_STRING, [], Guess::LOW_CONFIDENCE),
+        };
     }
 }
