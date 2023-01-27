@@ -66,6 +66,7 @@ class StringFilter extends Filter
 
         if (str_contains($condition, 'strings.')) {
             $query->getQuery()->addImport('strings');
+            $query->getQuery()->fill($field, '""');
         }
     }
 }
