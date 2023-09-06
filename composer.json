@@ -17,7 +17,7 @@
         "javer/influxdb-odm": "^1.0.4",
         "javer/influxdb-odm-bundle": "^1.0",
         "sonata-project/admin-bundle": "^4.17",
-        "sonata-project/form-extensions": "^1.15",
+        "sonata-project/form-extensions": "^1.15 || ^2.0",
         "symfony/config": "^4.4 || ^5.4 || ^6.0",
         "symfony/dependency-injection": "^4.4 || ^5.4 || ^6.0",
         "symfony/form": "^4.4 || ^5.4 || ^6.0",
