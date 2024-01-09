@@ -17,16 +17,12 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - php-version: '8.0'
-                      symfony-version: '5.4.*'
-                      sonata-version: '4.17.0'
-                      experimental: false
                     - php-version: '8.1'
                       symfony-version: '5.4.*'
                       sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.1'
-                      symfony-version: '6.3.*'
+                      symfony-version: '6.4.*'
                       sonata-version: '4.26.0'
                       experimental: false
                     - php-version: '8.2'
@@ -34,12 +30,16 @@ jobs:
                       sonata-version: '4.17.0'
                       experimental: false
                     - php-version: '8.2'
-                      symfony-version: '6.3.*'
-                      sonata-version: '4.17.0'
-                      experimental: false
-                    - php-version: '8.2'
-                      symfony-version: '6.3.*'
+                      symfony-version: '6.4.*'
                       sonata-version: '4.26.0'
+                      experimental: false
+                    - php-version: '8.3'
+                      symfony-version: '6.4.*'
+                      sonata-version: '4.29.0'
+                      experimental: false
+                    - php-version: '8.3'
+                      symfony-version: '7.0.*'
+                      sonata-version: '4.29.0'
                       experimental: false
 
         steps:
